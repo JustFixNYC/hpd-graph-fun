@@ -4,6 +4,11 @@ use petgraph::graph::{Graph, NodeIndex, EdgeIndex};
 use petgraph::algo::connected_components;
 use serde::Deserialize;
 
+enum Node {
+    Name(String),
+    BizAddr(String),
+}
+
 #[derive(Debug, Deserialize)]
 struct HpdRegistration {
     #[serde(alias = "FirstName")]
@@ -25,7 +30,7 @@ struct HpdRegistration {
 }
 
 fn example() -> Result<(), Box<dyn Error>> {
-    let mut graph = Graph::<String, (), petgraph::Undirected>::new_undirected();
+    let mut graph = Graph::<Node, (), petgraph::Undirected>::new_undirected();
     let mut name_nodes = HashMap::<String, NodeIndex<u32>>::new();
     let mut addr_nodes = HashMap::<String, NodeIndex<u32>>::new();
     let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
@@ -40,11 +45,11 @@ fn example() -> Result<(), Box<dyn Error>> {
                 let full_name = format!("{} {}", record.first_name, record.last_name);
                 let addr = format!("{} {} {}, {} {}", record.house_no, record.street_name, record.apt_no, record.city, record.state);
                 if !addr_nodes.contains_key(&addr) {
-                    let ni = graph.add_node(addr.clone());
+                    let ni = graph.add_node(Node::BizAddr(addr.clone()));
                     addr_nodes.insert(addr.clone(), ni);
                 }
                 if !name_nodes.contains_key(&full_name) {
-                    let ni = graph.add_node(full_name.clone());
+                    let ni = graph.add_node(Node::Name(full_name.clone()));
                     name_nodes.insert(full_name.clone(), ni);
                 }
                 let name_node = *name_nodes.get(&full_name).unwrap();
