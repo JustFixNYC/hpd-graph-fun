@@ -1,5 +1,6 @@
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
 use petgraph::algo::{connected_components, dijkstra};
+use petgraph::dot::{Config, Dot};
 use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
 use petgraph::visit::VisitMap;
 use serde::Deserialize;
@@ -9,6 +10,7 @@ use std::rc::Rc;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
+#[derive(Debug)]
 enum Node {
     Name(Rc<String>),
     BizAddr(Rc<String>),
@@ -18,6 +20,7 @@ type Edge = Vec<RegInfo>;
 
 type HpdPetGraph = Graph<Node, Edge, petgraph::Undirected>;
 
+#[derive(Debug)]
 struct RegInfo {
     #[allow(dead_code)]
     contact_id: u32,
@@ -108,6 +111,19 @@ impl HpdGraph {
         })
     }
 
+    fn dot_subgraph(&self, node: NodeIndex<u32>) -> String {
+        let mut dfs = petgraph::visit::Dfs::new(&self.graph, node);
+
+        while let Some(_) = dfs.next(&self.graph) {}
+
+        let g = petgraph::visit::NodeFiltered::from_fn(&self.graph, move |g| {
+            dfs.discovered.is_visited(&g)
+        });
+        let d = Dot::with_config(&g, &[Config::EdgeNoLabel]);
+
+        format!("{:?}", d)
+    }
+
     fn path_to_string(&self, path: Vec<NodeIndex<u32>>) -> String {
         let result: Vec<&str> = path
             .iter()
@@ -139,6 +155,19 @@ fn cmd_info() -> Result<(), Box<dyn Error>> {
         hpd.addr_nodes.len(),
         cc
     );
+
+    Ok(())
+}
+
+fn cmd_dot(full_name: &str) -> Result<(), Box<dyn Error>> {
+    let hpd = make_hpd_graph()?;
+
+    if let Some(node) = hpd.name_nodes.get(&full_name.to_owned()) {
+        println!("{}", hpd.dot_subgraph(*node));
+    } else {
+        println!("Unable to find a person with the name '{}'.", &full_name);
+        std::process::exit(1);
+    }
 
     Ok(())
 }
@@ -204,6 +233,11 @@ fn main() {
                         .takes_value(true),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("dot")
+                .about("Output a dot graph of a particular portfolio")
+                .arg(Arg::with_name("PERSON").required(true)),
+        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("longpaths") {
@@ -211,5 +245,8 @@ fn main() {
         cmd_longpaths(min_length).unwrap();
     } else if let Some(_) = matches.subcommand_matches("info") {
         cmd_info().unwrap();
+    } else if let Some(matches) = matches.subcommand_matches("dot") {
+        let person = matches.value_of("PERSON").unwrap();
+        cmd_dot(person).unwrap();
     }
 }
