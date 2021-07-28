@@ -1,4 +1,4 @@
-use clap::{App, AppSettings, Arg, SubCommand, value_t};
+use clap::{value_t, App, AppSettings, Arg, SubCommand};
 use petgraph::algo::{connected_components, dijkstra};
 use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
 use petgraph::visit::VisitMap;
@@ -46,7 +46,7 @@ struct HpdRegistration {
 }
 
 struct HpdGraph {
-    graph: Graph::<Node, Edge, petgraph::Undirected>,
+    graph: Graph<Node, Edge, petgraph::Undirected>,
     name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
 }
@@ -89,7 +89,7 @@ impl HpdGraph {
                     let edge = graph.edge_weight_mut(*edge_idx).unwrap();
                     edge.push(RegInfo {
                         id: record.reg_id,
-                        contact_id: record.reg_contact_id
+                        contact_id: record.reg_contact_id,
                     });
                 }
                 _ => {}
