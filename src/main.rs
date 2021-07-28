@@ -178,7 +178,7 @@ fn cmd_dot(name: &str) -> Result<(), Box<dyn Error>> {
     if let Some(node) = hpd.name_nodes.get(&name.to_owned()) {
         println!("{}", hpd.dot_subgraph(*node));
     } else {
-        println!("Unable to find a person with the name '{}'.", &name);
+        println!("Unable to find an exact match for the name '{}'.", &name);
         std::process::exit(1);
     }
 
@@ -249,7 +249,7 @@ fn main() {
         .subcommand(
             SubCommand::with_name("dot")
                 .about("Output a dot graph of a particular portfolio")
-                .arg(Arg::with_name("PERSON").required(true)),
+                .arg(Arg::with_name("NAME").required(true)),
         )
         .get_matches();
 
@@ -259,7 +259,7 @@ fn main() {
     } else if let Some(_) = matches.subcommand_matches("info") {
         cmd_info().unwrap();
     } else if let Some(matches) = matches.subcommand_matches("dot") {
-        let person = matches.value_of("PERSON").unwrap();
-        cmd_dot(person).unwrap();
+        let name = matches.value_of("NAME").unwrap();
+        cmd_dot(name).unwrap();
     }
 }
