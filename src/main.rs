@@ -121,5 +121,5 @@ fn example() -> Result<(), Box<dyn Error>> {
 }
 
 fn main() {
-    example().expect("it should work!");
+    example().unwrap();
 }
