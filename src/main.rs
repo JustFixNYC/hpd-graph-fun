@@ -1,12 +1,13 @@
 use std::error::Error;
+use std::rc::Rc;
 use std::collections::HashMap;
 use petgraph::graph::{Graph, NodeIndex, EdgeIndex};
 use petgraph::algo::connected_components;
 use serde::Deserialize;
 
 enum Node {
-    Name(String),
-    BizAddr(String),
+    Name(Rc<String>),
+    BizAddr(Rc<String>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -31,8 +32,8 @@ struct HpdRegistration {
 
 fn example() -> Result<(), Box<dyn Error>> {
     let mut graph = Graph::<Node, (), petgraph::Undirected>::new_undirected();
-    let mut name_nodes = HashMap::<String, NodeIndex<u32>>::new();
-    let mut addr_nodes = HashMap::<String, NodeIndex<u32>>::new();
+    let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
+    let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
     let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
     let mut rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
     for result in rdr.deserialize() {
@@ -42,15 +43,15 @@ fn example() -> Result<(), Box<dyn Error>> {
                 if record.house_no == "" || record.street_name == "" || record.first_name == "" || record.last_name == "" {
                     continue;
                 }
-                let full_name = format!("{} {}", record.first_name, record.last_name);
-                let addr = format!("{} {} {}, {} {}", record.house_no, record.street_name, record.apt_no, record.city, record.state);
+                let full_name = Rc::new(format!("{} {}", record.first_name, record.last_name));
+                let addr = Rc::new(format!("{} {} {}, {} {}", record.house_no, record.street_name, record.apt_no, record.city, record.state));
                 if !addr_nodes.contains_key(&addr) {
-                    let ni = graph.add_node(Node::BizAddr(addr.clone()));
-                    addr_nodes.insert(addr.clone(), ni);
+                    let ni = graph.add_node(Node::BizAddr(Rc::clone(&addr)));
+                    addr_nodes.insert(Rc::clone(&addr), ni);
                 }
                 if !name_nodes.contains_key(&full_name) {
-                    let ni = graph.add_node(Node::Name(full_name.clone()));
-                    name_nodes.insert(full_name.clone(), ni);
+                    let ni = graph.add_node(Node::Name(Rc::clone(&full_name)));
+                    name_nodes.insert(Rc::clone(&full_name), ni);
                 }
                 let name_node = *name_nodes.get(&full_name).unwrap();
                 let addr_node = *addr_nodes.get(&addr).unwrap();
