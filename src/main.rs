@@ -1,11 +1,11 @@
+use clap::{App, AppSettings, SubCommand};
+use petgraph::algo::{connected_components, dijkstra};
+use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
+use petgraph::visit::VisitMap;
+use serde::Deserialize;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::rc::Rc;
-use std::collections::{HashMap, HashSet};
-use clap::{AppSettings, App, SubCommand};
-use petgraph::visit::VisitMap;
-use petgraph::graph::{Graph, NodeIndex, EdgeIndex};
-use petgraph::algo::{connected_components, dijkstra};
-use serde::Deserialize;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -35,9 +35,9 @@ struct HpdRegistration {
 }
 
 struct HpdGraph {
-    graph: Graph::<Node, (), petgraph::Undirected>,
-    name_nodes: HashMap::<Rc<String>, NodeIndex<u32>>,
-    addr_nodes: HashMap::<Rc<String>, NodeIndex<u32>>,
+    graph: Graph<Node, (), petgraph::Undirected>,
+    name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
+    addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
 }
 
 impl HpdGraph {
@@ -49,22 +49,33 @@ impl HpdGraph {
         for result in rdr.deserialize() {
             let record: HpdRegistration = result?;
             match record._type.as_ref() {
-                "HeadOfficer"|"IndividualOwner"|"CorporateOwner" => {
-                    if record.house_no == "" || record.street_name == "" || record.first_name == "" || record.last_name == "" {
+                "HeadOfficer" | "IndividualOwner" | "CorporateOwner" => {
+                    if record.house_no == ""
+                        || record.street_name == ""
+                        || record.first_name == ""
+                        || record.last_name == ""
+                    {
                         continue;
                     }
                     let full_name = Rc::new(format!("{} {}", record.first_name, record.last_name));
-                    let addr = Rc::new(format!("{} {} {}, {} {}", record.house_no, record.street_name, record.apt_no, record.city, record.state));
-                    let addr_node = *addr_nodes.entry(Rc::clone(&addr)).or_insert_with(|| {
-                        graph.add_node(Node::BizAddr(Rc::clone(&addr)))
-                    });
-                    let name_node = *name_nodes.entry(Rc::clone(&full_name)).or_insert_with(|| {
-                        graph.add_node(Node::Name(Rc::clone(&full_name)))
-                    });
-                    edges.entry((name_node, addr_node)).or_insert_with(|| {
-                        graph.add_edge(name_node, addr_node, ())
-                    });
-                },
+                    let addr = Rc::new(format!(
+                        "{} {} {}, {} {}",
+                        record.house_no,
+                        record.street_name,
+                        record.apt_no,
+                        record.city,
+                        record.state
+                    ));
+                    let addr_node = *addr_nodes
+                        .entry(Rc::clone(&addr))
+                        .or_insert_with(|| graph.add_node(Node::BizAddr(Rc::clone(&addr))));
+                    let name_node = *name_nodes
+                        .entry(Rc::clone(&full_name))
+                        .or_insert_with(|| graph.add_node(Node::Name(Rc::clone(&full_name))));
+                    edges
+                        .entry((name_node, addr_node))
+                        .or_insert_with(|| graph.add_edge(name_node, addr_node, ()));
+                }
                 _ => {}
             }
         }
@@ -72,11 +83,9 @@ impl HpdGraph {
         Ok(HpdGraph {
             graph,
             name_nodes,
-            addr_nodes
+            addr_nodes,
         })
     }
-
-
 }
 
 fn cmd_longpaths() -> Result<(), Box<dyn Error>> {
@@ -113,7 +122,12 @@ fn cmd_longpaths() -> Result<(), Box<dyn Error>> {
                 }
             }
             if max_cost > 10 {
-                println!("  {} {} -> {}", max_cost, full_name, max_cost_full_name.unwrap());
+                println!(
+                    "  {} {} -> {}",
+                    max_cost,
+                    full_name,
+                    max_cost_full_name.unwrap()
+                );
             }
         }
     }
@@ -128,8 +142,12 @@ fn main() {
         .setting(AppSettings::ArgRequiredElseHelp)
         .version(VERSION)
         .author("Atul Varma <atul@justfix.nyc>")
-        .about("Fun with NYC Housing Preservation & Development (HPD) graph structure data analysis.")
-        .subcommand(SubCommand::with_name("longpaths").about("Shows the longest paths in the graph"))
+        .about(
+            "Fun with NYC Housing Preservation & Development (HPD) graph structure data analysis.",
+        )
+        .subcommand(
+            SubCommand::with_name("longpaths").about("Shows the longest paths in the graph"),
+        )
         .get_matches();
 
     if let Some(_matches) = matches.subcommand_matches("longpaths") {
