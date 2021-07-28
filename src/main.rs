@@ -152,6 +152,18 @@ impl HpdGraph {
             .collect::<Vec<&str>>()
             .join(" -> ")
     }
+
+    fn find_name(&self, search: &str) -> Option<NodeIndex<u32>> {
+        if let Some(node) = self.name_nodes.get(&search.to_owned()) {
+            return Some(*node);
+        }
+        for (name, node) in self.name_nodes.iter() {
+            if name.find(search).is_some() {
+                return Some(*node);
+            }
+        }
+        None
+    }
 }
 
 fn make_hpd_graph() -> Result<HpdGraph, Box<dyn Error>> {
@@ -175,10 +187,14 @@ fn cmd_info() -> Result<(), Box<dyn Error>> {
 fn cmd_dot(name: &str) -> Result<(), Box<dyn Error>> {
     let hpd = make_hpd_graph()?;
 
-    if let Some(node) = hpd.name_nodes.get(&name.to_owned()) {
-        println!("{}", hpd.dot_subgraph(*node));
+    if let Some(node) = hpd.find_name(&name) {
+        eprintln!(
+            "Found a matching name '{}'.",
+            hpd.graph.node_weight(node).unwrap().to_str()
+        );
+        println!("{}", hpd.dot_subgraph(node));
     } else {
-        println!("Unable to find an exact match for the name '{}'.", &name);
+        eprintln!("Unable to find a match for the name '{}'.", &name);
         std::process::exit(1);
     }
 
