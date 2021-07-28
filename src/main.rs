@@ -16,6 +16,15 @@ enum Node {
     BizAddr(Rc<String>),
 }
 
+impl Node {
+    fn to_string(&self) -> Rc<String> {
+        match self {
+            Node::BizAddr(name) => Rc::clone(name),
+            Node::Name(name) => Rc::clone(name),
+        }
+    }
+}
+
 type Edge = Vec<RegInfo>;
 
 type HpdPetGraph = Graph<Node, Edge, petgraph::Undirected>;
@@ -119,25 +128,27 @@ impl HpdGraph {
         let g = petgraph::visit::NodeFiltered::from_fn(&self.graph, move |g| {
             dfs.discovered.is_visited(&g)
         });
-        let d = Dot::with_config(&g, &[Config::EdgeNoLabel]);
+        let d = Dot::with_attr_getters(
+            &g,
+            &[Config::EdgeNoLabel, Config::NodeNoLabel],
+            &|_, edge| format!("label=\"{}\"", edge.weight().len()),
+            &|_, (_, whatever)| format!("label=\"{}\"", whatever.to_string().to_string()),
+        );
 
         format!("{:?}", d)
     }
 
     fn path_to_string(&self, path: Vec<NodeIndex<u32>>) -> String {
-        let result: Vec<&str> = path
+        let result: Vec<Rc<String>> = path
             .iter()
-            .map(|node| {
-                match self.graph.node_weight(*node).unwrap() {
-                    Node::BizAddr(name) => name,
-                    Node::Name(name) => name,
-                }
-                .as_ref()
-                .as_ref()
-            })
+            .map(|node| self.graph.node_weight(*node).unwrap().to_string())
             .collect();
 
-        result.join(" -> ")
+        result
+            .iter()
+            .map(|s| s.as_ref().as_ref())
+            .collect::<Vec<&str>>()
+            .join(" -> ")
     }
 }
 
