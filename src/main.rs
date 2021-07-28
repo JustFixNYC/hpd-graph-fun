@@ -153,8 +153,8 @@ impl HpdGraph {
             .join(" -> ")
     }
 
-    fn find_name(&self, search: &str) -> Option<NodeIndex<u32>> {
-        if let Some(node) = self.name_nodes.get(&search.to_owned()) {
+    fn find_name(&self, search: &String) -> Option<NodeIndex<u32>> {
+        if let Some(node) = self.name_nodes.get(search) {
             return Some(*node);
         }
         for (name, node) in self.name_nodes.iter() {
@@ -184,7 +184,7 @@ fn cmd_info() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn cmd_dot(name: &str) -> Result<(), Box<dyn Error>> {
+fn cmd_dot(name: &String) -> Result<(), Box<dyn Error>> {
     let hpd = make_hpd_graph()?;
 
     if let Some(node) = hpd.find_name(&name) {
@@ -275,7 +275,7 @@ fn main() {
     } else if let Some(_) = matches.subcommand_matches("info") {
         cmd_info().unwrap();
     } else if let Some(matches) = matches.subcommand_matches("dot") {
-        let name = matches.value_of("NAME").unwrap();
-        cmd_dot(name).unwrap();
+        let name = matches.value_of("NAME").unwrap().to_owned();
+        cmd_dot(&name).unwrap();
     }
 }
