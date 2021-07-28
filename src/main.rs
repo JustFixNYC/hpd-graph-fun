@@ -1,10 +1,13 @@
 use std::error::Error;
 use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
+use clap::{AppSettings, App, SubCommand};
 use petgraph::visit::VisitMap;
 use petgraph::graph::{Graph, NodeIndex, EdgeIndex};
 use petgraph::algo::{connected_components, dijkstra};
 use serde::Deserialize;
+
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 enum Node {
     Name(Rc<String>),
@@ -76,7 +79,7 @@ impl HpdGraph {
 
 }
 
-fn example() -> Result<(), Box<dyn Error>> {
+fn cmd_longpaths() -> Result<(), Box<dyn Error>> {
     let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
     let hpd = HpdGraph::from_csv(rdr)?;
     let cc = connected_components(&hpd.graph);
@@ -121,5 +124,15 @@ fn example() -> Result<(), Box<dyn Error>> {
 }
 
 fn main() {
-    example().unwrap();
+    let matches = App::new("hpd-graph-fun")
+        .setting(AppSettings::ArgRequiredElseHelp)
+        .version(VERSION)
+        .author("Atul Varma <atul@justfix.nyc>")
+        .about("Fun with NYC Housing Preservation & Development (HPD) graph structure data analysis.")
+        .subcommand(SubCommand::with_name("longpaths").about("Shows the longest paths in the graph"))
+        .get_matches();
+
+    if let Some(_matches) = matches.subcommand_matches("longpaths") {
+        cmd_longpaths().unwrap();
+    }
 }
