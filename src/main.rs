@@ -1,8 +1,9 @@
 use std::error::Error;
 use std::rc::Rc;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use petgraph::visit::VisitMap;
 use petgraph::graph::{Graph, NodeIndex, EdgeIndex};
-use petgraph::algo::connected_components;
+use petgraph::algo::{connected_components, dijkstra};
 use serde::Deserialize;
 
 enum Node {
@@ -67,20 +68,36 @@ fn example() -> Result<(), Box<dyn Error>> {
         cc
     );
 
-    /*
-    for start in graph.node_indices() {
-        let mut dfs = petgraph::visit::Dfs::new(&graph, start);
-        let mut visited_vec = vec![];
+    let mut visits = HashSet::new();
 
-        while let Some(visited) = dfs.next(&graph) {
-            visited_vec.push(visited);
-        }
+    println!("\nLongest paths:\n");
 
-        if visited_vec.len() > 10 {
-            let visited_strs: Vec<&str> = visited_vec.iter().map(|v| graph.node_weight(*v).unwrap().as_ref()).collect();
-            println!("Ooooo {}: {}", visited_vec.len(), visited_strs.join(" ->  "));
+    for node in graph.node_indices() {
+        if visits.is_visited(&node) {
+            continue;
         }
-    }*/
+        visits.visit(node);
+        if let Some(Node::Name(full_name)) = graph.node_weight(node) {
+            let mut max_cost = 0;
+            let mut max_cost_full_name = None;
+            let dijkstra_map = dijkstra(&graph, node, None, |_| 1);
+            for (other_node, cost) in dijkstra_map {
+                visits.visit(other_node);
+                if let Some(Node::Name(other_full_name)) = graph.node_weight(other_node) {
+                    if cost > max_cost {
+                        max_cost = cost;
+                        max_cost_full_name = Some(Rc::clone(other_full_name));
+                    }
+                }
+            }
+            if max_cost > 10 {
+                println!("  {} {} -> {}", max_cost, full_name, max_cost_full_name.unwrap());
+            }
+        }
+    }
+
+    println!("\nVisited {} total nodes.", visits.len());
+
     //use petgraph::dot::{Dot, Config};
     //let dot = Dot::with_config(&graph, &[Config::EdgeNoLabel]);
     //println!("{:?}", dot);
