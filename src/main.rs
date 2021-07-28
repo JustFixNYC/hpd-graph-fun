@@ -104,9 +104,13 @@ impl HpdGraph {
     }
 }
 
-fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
+fn make_hpd_graph() -> Result<HpdGraph, Box<dyn Error>> {
     let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
-    let hpd = HpdGraph::from_csv(rdr)?;
+    HpdGraph::from_csv(rdr)
+}
+
+fn cmd_info() -> Result<(), Box<dyn Error>> {
+    let hpd = make_hpd_graph()?;
     let cc = connected_components(&hpd.graph);
     println!(
         "Read {} unique names, {} unique addresses, and {} connected components.",
@@ -115,6 +119,11 @@ fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
         cc
     );
 
+    Ok(())
+}
+
+fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
+    let hpd = make_hpd_graph()?;
     let mut visits = HashSet::new();
 
     println!("\nPaths with minimum length {}:\n", min_length);
@@ -148,8 +157,6 @@ fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    println!("\nVisited {} total nodes.", visits.len());
-
     Ok(())
 }
 
@@ -160,6 +167,9 @@ fn main() {
         .author("Atul Varma <atul@justfix.nyc>")
         .about(
             "Fun with NYC Housing Preservation & Development (HPD) graph structure data analysis.",
+        )
+        .subcommand(
+            SubCommand::with_name("info").about("Shows general information about the graph"),
         )
         .subcommand(
             SubCommand::with_name("longpaths")
@@ -178,5 +188,7 @@ fn main() {
     if let Some(matches) = matches.subcommand_matches("longpaths") {
         let min_length = value_t!(matches.value_of("min-length"), u32).unwrap_or_else(|e| e.exit());
         cmd_longpaths(min_length).unwrap();
+    } else if let Some(_) = matches.subcommand_matches("info") {
+        cmd_info().unwrap();
     }
 }
