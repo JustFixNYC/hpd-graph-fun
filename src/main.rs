@@ -82,16 +82,14 @@ impl HpdGraph {
             let record: HpdRegistration = result?;
             match record._type.as_ref() {
                 "HeadOfficer" | "IndividualOwner" | "CorporateOwner" => {
-                    if record.house_no == ""
-                        || record.street_name == ""
-                    {
+                    if record.house_no == "" || record.street_name == "" {
                         continue;
                     }
                     let has_full_name = record.first_name != "" && record.last_name != "";
                     if !(has_full_name || record.corp_name != "") {
                         continue;
                     }
-                    let full_name = if has_full_name {
+                    let name = if has_full_name {
                         Rc::new(format!("{} {}", record.first_name, record.last_name))
                     } else {
                         Rc::new(record.corp_name)
@@ -108,8 +106,8 @@ impl HpdGraph {
                         .entry(Rc::clone(&addr))
                         .or_insert_with(|| graph.add_node(Node::BizAddr(Rc::clone(&addr))));
                     let name_node = *name_nodes
-                        .entry(Rc::clone(&full_name))
-                        .or_insert_with(|| graph.add_node(Node::Name(Rc::clone(&full_name))));
+                        .entry(Rc::clone(&name))
+                        .or_insert_with(|| graph.add_node(Node::Name(Rc::clone(&name))));
                     let edge_idx = edges
                         .entry((name_node, addr_node))
                         .or_insert_with(|| graph.add_edge(name_node, addr_node, vec![]));
@@ -174,13 +172,13 @@ fn cmd_info() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn cmd_dot(full_name: &str) -> Result<(), Box<dyn Error>> {
+fn cmd_dot(name: &str) -> Result<(), Box<dyn Error>> {
     let hpd = make_hpd_graph()?;
 
-    if let Some(node) = hpd.name_nodes.get(&full_name.to_owned()) {
+    if let Some(node) = hpd.name_nodes.get(&name.to_owned()) {
         println!("{}", hpd.dot_subgraph(*node));
     } else {
-        println!("Unable to find a person with the name '{}'.", &full_name);
+        println!("Unable to find a person with the name '{}'.", &name);
         std::process::exit(1);
     }
 
@@ -198,13 +196,13 @@ fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
             continue;
         }
         visits.visit(node);
-        if let Some(Node::Name(_full_name)) = hpd.graph.node_weight(node) {
+        if let Some(Node::Name(_)) = hpd.graph.node_weight(node) {
             let mut max_cost = 0;
             let mut max_cost_node = None;
             let dijkstra_map = dijkstra(&hpd.graph, node, None, |_| 1);
             for (other_node, cost) in dijkstra_map {
                 visits.visit(other_node);
-                if let Some(Node::Name(_other_full_name)) = hpd.graph.node_weight(other_node) {
+                if let Some(Node::Name(_)) = hpd.graph.node_weight(other_node) {
                     if cost > max_cost {
                         max_cost = cost;
                         max_cost_node = Some(other_node);
