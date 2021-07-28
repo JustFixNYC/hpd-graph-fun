@@ -17,7 +17,10 @@ enum Node {
 type Edge = Vec<RegInfo>;
 
 struct RegInfo {
+    #[allow(dead_code)]
     contact_id: u32,
+
+    #[allow(dead_code)]
     id: u32,
 }
 
