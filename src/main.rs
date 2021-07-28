@@ -42,6 +42,8 @@ struct RegInfo {
 
 #[derive(Debug, Deserialize)]
 struct HpdRegistration {
+    #[serde(alias = "CorporationName")]
+    corp_name: String,
     #[serde(alias = "FirstName")]
     first_name: String,
     #[serde(alias = "LastName")]
@@ -82,12 +84,18 @@ impl HpdGraph {
                 "HeadOfficer" | "IndividualOwner" | "CorporateOwner" => {
                     if record.house_no == ""
                         || record.street_name == ""
-                        || record.first_name == ""
-                        || record.last_name == ""
                     {
                         continue;
                     }
-                    let full_name = Rc::new(format!("{} {}", record.first_name, record.last_name));
+                    let has_full_name = record.first_name != "" && record.last_name != "";
+                    if !(has_full_name || record.corp_name != "") {
+                        continue;
+                    }
+                    let full_name = if has_full_name {
+                        Rc::new(format!("{} {}", record.first_name, record.last_name))
+                    } else {
+                        Rc::new(record.corp_name)
+                    };
                     let addr = Rc::new(format!(
                         "{} {} {}, {} {}",
                         record.house_no,
