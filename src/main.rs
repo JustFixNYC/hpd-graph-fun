@@ -14,6 +14,13 @@ enum Node {
     BizAddr(Rc<String>),
 }
 
+type Edge = Vec<RegInfo>;
+
+struct RegInfo {
+    contact_id: u32,
+    id: u32,
+}
+
 #[derive(Debug, Deserialize)]
 struct HpdRegistration {
     #[serde(alias = "FirstName")]
@@ -32,17 +39,21 @@ struct HpdRegistration {
     city: String,
     #[serde(alias = "BusinessState")]
     state: String,
+    #[serde(alias = "RegistrationContactID")]
+    reg_contact_id: u32,
+    #[serde(alias = "RegistrationID")]
+    reg_id: u32,
 }
 
 struct HpdGraph {
-    graph: Graph<Node, (), petgraph::Undirected>,
+    graph: Graph::<Node, Edge, petgraph::Undirected>,
     name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
 }
 
 impl HpdGraph {
     fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>) -> Result<Self, Box<dyn Error>> {
-        let mut graph = Graph::<Node, (), petgraph::Undirected>::new_undirected();
+        let mut graph = Graph::<Node, Edge, petgraph::Undirected>::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
@@ -72,9 +83,14 @@ impl HpdGraph {
                     let name_node = *name_nodes
                         .entry(Rc::clone(&full_name))
                         .or_insert_with(|| graph.add_node(Node::Name(Rc::clone(&full_name))));
-                    edges
+                    let edge_idx = edges
                         .entry((name_node, addr_node))
-                        .or_insert_with(|| graph.add_edge(name_node, addr_node, ()));
+                        .or_insert_with(|| graph.add_edge(name_node, addr_node, vec![]));
+                    let edge = graph.edge_weight_mut(*edge_idx).unwrap();
+                    edge.push(RegInfo {
+                        id: record.reg_id,
+                        contact_id: record.reg_contact_id
+                    });
                 }
                 _ => {}
             }
