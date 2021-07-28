@@ -17,11 +17,13 @@ enum Node {
 }
 
 impl Node {
-    fn to_string(&self) -> Rc<String> {
+    fn to_str(&self) -> &str {
         match self {
-            Node::BizAddr(name) => Rc::clone(name),
-            Node::Name(name) => Rc::clone(name),
+            Node::BizAddr(name) => name,
+            Node::Name(name) => name,
         }
+        .as_ref()
+        .as_ref()
     }
 }
 
@@ -132,21 +134,15 @@ impl HpdGraph {
             &g,
             &[Config::EdgeNoLabel, Config::NodeNoLabel],
             &|_, edge| format!("label=\"{}\"", edge.weight().len()),
-            &|_, (_, whatever)| format!("label=\"{}\"", whatever.to_string().to_string()),
+            &|_, (_, whatever)| format!("label=\"{}\"", whatever.to_str()),
         );
 
         format!("{:?}", d)
     }
 
     fn path_to_string(&self, path: Vec<NodeIndex<u32>>) -> String {
-        let result: Vec<Rc<String>> = path
-            .iter()
-            .map(|node| self.graph.node_weight(*node).unwrap().to_string())
-            .collect();
-
-        result
-            .iter()
-            .map(|s| s.as_ref().as_ref())
+        path.iter()
+            .map(|node| self.graph.node_weight(*node).unwrap().to_str())
             .collect::<Vec<&str>>()
             .join(" -> ")
     }
