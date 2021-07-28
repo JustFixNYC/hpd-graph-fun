@@ -117,9 +117,6 @@ fn example() -> Result<(), Box<dyn Error>> {
 
     println!("\nVisited {} total nodes.", visits.len());
 
-    //use petgraph::dot::{Dot, Config};
-    //let dot = Dot::with_config(&graph, &[Config::EdgeNoLabel]);
-    //println!("{:?}", dot);
     Ok(())
 }
 
