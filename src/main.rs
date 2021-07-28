@@ -1,4 +1,4 @@
-use clap::{App, AppSettings, SubCommand};
+use clap::{App, AppSettings, Arg, SubCommand, value_t};
 use petgraph::algo::{connected_components, dijkstra};
 use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
 use petgraph::visit::VisitMap;
@@ -88,7 +88,7 @@ impl HpdGraph {
     }
 }
 
-fn cmd_longpaths() -> Result<(), Box<dyn Error>> {
+fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
     let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
     let hpd = HpdGraph::from_csv(rdr)?;
     let cc = connected_components(&hpd.graph);
@@ -101,7 +101,7 @@ fn cmd_longpaths() -> Result<(), Box<dyn Error>> {
 
     let mut visits = HashSet::new();
 
-    println!("\nLongest paths:\n");
+    println!("\nPaths with minimum length {}:\n", min_length);
 
     for node in hpd.graph.node_indices() {
         if visits.is_visited(&node) {
@@ -121,7 +121,7 @@ fn cmd_longpaths() -> Result<(), Box<dyn Error>> {
                     }
                 }
             }
-            if max_cost > 10 {
+            if max_cost >= min_length {
                 println!(
                     "  {} {} -> {}",
                     max_cost,
@@ -146,11 +146,21 @@ fn main() {
             "Fun with NYC Housing Preservation & Development (HPD) graph structure data analysis.",
         )
         .subcommand(
-            SubCommand::with_name("longpaths").about("Shows the longest paths in the graph"),
+            SubCommand::with_name("longpaths")
+                .about("Shows the longest paths in the graph")
+                .arg(
+                    Arg::with_name("min-length")
+                        .short("m")
+                        .value_name("LENGTH")
+                        .default_value("10")
+                        .help("Only show paths with this minimum length")
+                        .takes_value(true),
+                ),
         )
         .get_matches();
 
-    if let Some(_matches) = matches.subcommand_matches("longpaths") {
-        cmd_longpaths().unwrap();
+    if let Some(matches) = matches.subcommand_matches("longpaths") {
+        let min_length = value_t!(matches.value_of("min-length"), u32).unwrap_or_else(|e| e.exit());
+        cmd_longpaths(min_length).unwrap();
     }
 }
