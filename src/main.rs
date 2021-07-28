@@ -45,21 +45,15 @@ fn example() -> Result<(), Box<dyn Error>> {
                 }
                 let full_name = Rc::new(format!("{} {}", record.first_name, record.last_name));
                 let addr = Rc::new(format!("{} {} {}, {} {}", record.house_no, record.street_name, record.apt_no, record.city, record.state));
-                if !addr_nodes.contains_key(&addr) {
-                    let ni = graph.add_node(Node::BizAddr(Rc::clone(&addr)));
-                    addr_nodes.insert(Rc::clone(&addr), ni);
-                }
-                if !name_nodes.contains_key(&full_name) {
-                    let ni = graph.add_node(Node::Name(Rc::clone(&full_name)));
-                    name_nodes.insert(Rc::clone(&full_name), ni);
-                }
-                let name_node = *name_nodes.get(&full_name).unwrap();
-                let addr_node = *addr_nodes.get(&addr).unwrap();
-                let edge = (name_node, addr_node);
-                if !edges.contains_key(&edge) {
-                    let ei = graph.add_edge(name_node, addr_node, ());
-                    edges.insert(edge, ei);
-                }
+                let addr_node = *addr_nodes.entry(Rc::clone(&addr)).or_insert_with(|| {
+                    graph.add_node(Node::BizAddr(Rc::clone(&addr)))
+                });
+                let name_node = *name_nodes.entry(Rc::clone(&full_name)).or_insert_with(|| {
+                    graph.add_node(Node::Name(Rc::clone(&full_name)))
+                });
+                edges.entry((name_node, addr_node)).or_insert_with(|| {
+                    graph.add_edge(name_node, addr_node, ())
+                });
             },
             _ => {}
         }
