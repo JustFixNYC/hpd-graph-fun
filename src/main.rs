@@ -16,6 +16,8 @@ enum Node {
 
 type Edge = Vec<RegInfo>;
 
+type HpdPetGraph = Graph<Node, Edge, petgraph::Undirected>;
+
 struct RegInfo {
     #[allow(dead_code)]
     contact_id: u32,
@@ -49,14 +51,14 @@ struct HpdRegistration {
 }
 
 struct HpdGraph {
-    graph: Graph<Node, Edge, petgraph::Undirected>,
+    graph: HpdPetGraph,
     name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
 }
 
 impl HpdGraph {
     fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>) -> Result<Self, Box<dyn Error>> {
-        let mut graph = Graph::<Node, Edge, petgraph::Undirected>::new_undirected();
+        let mut graph: HpdPetGraph = Graph::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
