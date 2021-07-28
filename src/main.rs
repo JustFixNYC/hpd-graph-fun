@@ -105,6 +105,22 @@ impl HpdGraph {
             addr_nodes,
         })
     }
+
+    fn path_to_string(&self, path: Vec<NodeIndex<u32>>) -> String {
+        let result: Vec<&str> = path
+            .iter()
+            .map(|node| {
+                match self.graph.node_weight(*node).unwrap() {
+                    Node::BizAddr(name) => name,
+                    Node::Name(name) => name,
+                }
+                .as_ref()
+                .as_ref()
+            })
+            .collect();
+
+        result.join(" -> ")
+    }
 }
 
 fn make_hpd_graph() -> Result<HpdGraph, Box<dyn Error>> {
@@ -136,26 +152,26 @@ fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
             continue;
         }
         visits.visit(node);
-        if let Some(Node::Name(full_name)) = hpd.graph.node_weight(node) {
+        if let Some(Node::Name(_full_name)) = hpd.graph.node_weight(node) {
             let mut max_cost = 0;
-            let mut max_cost_full_name = None;
+            let mut max_cost_node = None;
             let dijkstra_map = dijkstra(&hpd.graph, node, None, |_| 1);
             for (other_node, cost) in dijkstra_map {
                 visits.visit(other_node);
-                if let Some(Node::Name(other_full_name)) = hpd.graph.node_weight(other_node) {
+                if let Some(Node::Name(_other_full_name)) = hpd.graph.node_weight(other_node) {
                     if cost > max_cost {
                         max_cost = cost;
-                        max_cost_full_name = Some(Rc::clone(other_full_name));
+                        max_cost_node = Some(other_node);
                     }
                 }
             }
             if max_cost >= min_length {
-                println!(
-                    "  {} {} -> {}",
-                    max_cost,
-                    full_name,
-                    max_cost_full_name.unwrap()
-                );
+                if let Some(other_node) = max_cost_node {
+                    let (_, path) =
+                        petgraph::algo::astar(&hpd.graph, node, |n| n == other_node, |_| 1, |_| 1)
+                            .unwrap();
+                    println!("length {} path: {}\n", max_cost, &hpd.path_to_string(path));
+                }
             }
         }
     }
