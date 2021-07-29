@@ -1,4 +1,5 @@
 mod hpd_graph;
+mod hpd_registrations;
 mod portfolio;
 
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
@@ -8,10 +9,14 @@ use std::collections::HashSet;
 use std::error::Error;
 
 use hpd_graph::{HpdGraph, Node};
+use hpd_registrations::HpdRegistrationMap;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 fn make_hpd_graph() -> Result<HpdGraph, Box<dyn Error>> {
+    let reg_rdr = csv::Reader::from_path("Multiple_Dwelling_Registrations.csv")?;
+    HpdRegistrationMap::from_csv(reg_rdr)?;
+
     let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
     HpdGraph::from_csv(rdr)
 }
