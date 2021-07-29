@@ -41,7 +41,7 @@ struct RegInfo {
 }
 
 #[derive(Debug, Deserialize)]
-struct HpdRegistration {
+struct HpdRegistrationContact {
     #[serde(alias = "CorporationName")]
     corp_name: String,
     #[serde(alias = "FirstName")]
@@ -153,7 +153,7 @@ impl HpdGraph {
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
         for result in rdr.deserialize() {
-            let record: HpdRegistration = result?;
+            let record: HpdRegistrationContact = result?;
             match record._type.as_ref() {
                 "HeadOfficer" | "IndividualOwner" | "CorporateOwner" => {
                     if record.house_no == "" || record.street_name == "" {
