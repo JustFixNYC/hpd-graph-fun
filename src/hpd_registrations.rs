@@ -1,7 +1,6 @@
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
-use serde::Deserialize;
-
 
 #[derive(Debug, Deserialize)]
 struct HpdRegistration {
@@ -24,8 +23,6 @@ impl HpdRegistrationMap {
             let _record: HpdRegistration = result?;
         }
 
-        Ok(HpdRegistrationMap {
-            registrations
-        })
+        Ok(HpdRegistrationMap { registrations })
     }
 }
