@@ -1,4 +1,5 @@
 mod hpd_graph;
+mod portfolio;
 
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
 use petgraph::algo::{connected_components, dijkstra};
@@ -37,7 +38,7 @@ fn cmd_dot(name: &String) -> Result<(), Box<dyn Error>> {
             hpd.graph.node_weight(node).unwrap().to_str()
         );
         let portfolio = hpd.portfolio_for_node(node).unwrap();
-        println!("{}", portfolio.dot_graph(&hpd));
+        println!("{}", portfolio.dot_graph(&hpd.graph));
     } else {
         eprintln!("Unable to find a match for the name '{}'.", &name);
         std::process::exit(1);

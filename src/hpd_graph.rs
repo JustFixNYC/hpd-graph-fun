@@ -1,10 +1,10 @@
-use petgraph::dot::{Config, Dot};
 use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
-use petgraph::visit::{Dfs, VisitMap};
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
+
+use super::portfolio::{Portfolio, PortfolioMap};
 
 #[derive(Debug)]
 pub enum Node {
@@ -25,7 +25,7 @@ impl Node {
 
 type Edge = Vec<RegInfo>;
 
-type HpdPetGraph = Graph<Node, Edge, petgraph::Undirected>;
+pub type HpdPetGraph = Graph<Node, Edge, petgraph::Undirected>;
 
 #[derive(Debug)]
 pub struct RegInfo {
@@ -57,79 +57,6 @@ struct HpdRegistrationContact {
     reg_contact_id: u32,
     #[serde(alias = "RegistrationID")]
     reg_id: u32,
-}
-
-pub struct Portfolio {
-    nodes: HashSet<NodeIndex<u32>>,
-    name: String,
-}
-
-impl Portfolio {
-    fn new(nodes: HashSet<NodeIndex<u32>>, name: String) -> Self {
-        Portfolio { nodes, name }
-    }
-
-    pub fn dot_graph(&self, hpd: &HpdGraph) -> String {
-        let g = &hpd.graph;
-        let g = petgraph::visit::NodeFiltered::from_fn(&g, move |g| self.nodes.is_visited(&g));
-        let d = Dot::with_attr_getters(
-            &g,
-            &[Config::EdgeNoLabel, Config::NodeNoLabel],
-            &|_, edge| format!("label=\"{}\"", edge.weight().len()),
-            &|_, (_, whatever)| format!("label=\"{}\"", whatever.to_str()),
-        );
-
-        format!("// {}\n\n{:?}", self.name, d)
-    }
-}
-
-struct PortfolioMap {
-    portfolios: Vec<Portfolio>,
-    node_portfolios: HashMap<NodeIndex<u32>, usize>,
-}
-
-impl PortfolioMap {
-    fn from_graph(graph: &HpdPetGraph) -> Self {
-        let mut visited = HashSet::with_capacity(graph.node_count());
-        let mut portfolios = vec![];
-        let mut node_portfolios = HashMap::new();
-        let mut portfolio_idx = 0;
-
-        for start in graph.node_indices() {
-            if visited.is_visited(&start) {
-                continue;
-            }
-            visited.visit(start);
-            let mut nodes = HashSet::new();
-            let mut dfs = Dfs::new(&graph, start);
-
-            while let Some(node) = dfs.next(&graph) {
-                visited.visit(node);
-                nodes.insert(node);
-                node_portfolios.insert(node, portfolio_idx);
-            }
-
-            portfolios.push(Portfolio::new(
-                nodes,
-                format!("Portfolio #{}", portfolio_idx),
-            ));
-
-            portfolio_idx += 1;
-        }
-
-        PortfolioMap {
-            portfolios,
-            node_portfolios,
-        }
-    }
-
-    fn for_node(&self, node: NodeIndex<u32>) -> Option<&Portfolio> {
-        if let Some(idx) = self.node_portfolios.get(&node) {
-            Some(&self.portfolios[*idx])
-        } else {
-            None
-        }
-    }
 }
 
 pub struct HpdGraph {
