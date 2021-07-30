@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, Duration};
+use chrono::{Duration, NaiveDate};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
@@ -39,7 +39,10 @@ pub struct HpdRegistrationMap {
 }
 
 impl HpdRegistrationMap {
-    pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>, max_expiration_age: Duration) -> Result<Self, Box<dyn Error>> {
+    pub fn from_csv<T: std::io::Read>(
+        mut rdr: csv::Reader<T>,
+        max_expiration_age: Duration,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut count = 0;
         let mut regs_by_id = HashMap::<u32, Vec<HpdRegistration>>::new();
         let today = chrono::offset::Local::today().naive_local();
@@ -55,7 +58,7 @@ impl HpdRegistrationMap {
                     reg_id: r.reg_id,
                     reg_end_date,
                     bbl,
-                    bin: r.bin
+                    bin: r.bin,
                 };
                 let regs = regs_by_id.entry(r.reg_id).or_insert_with(|| vec![]);
                 regs.push(reg);
@@ -63,11 +66,13 @@ impl HpdRegistrationMap {
             count += 1;
         }
 
-        println!("Loaded {} registrations (skipped {}).", regs_by_id.len(), count - regs_by_id.len());
+        println!(
+            "Loaded {} registrations (skipped {}).",
+            regs_by_id.len(),
+            count - regs_by_id.len()
+        );
 
-        Ok(HpdRegistrationMap {
-            regs_by_id
-        })
+        Ok(HpdRegistrationMap { regs_by_id })
     }
 
     pub fn is_expired_or_invalid(&self, id: u32) -> bool {

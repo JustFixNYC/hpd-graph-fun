@@ -3,12 +3,12 @@ mod hpd_graph;
 mod hpd_registrations;
 mod portfolio;
 
+use chrono::Duration;
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
 use petgraph::algo::{connected_components, dijkstra};
 use petgraph::visit::VisitMap;
 use std::collections::HashSet;
 use std::error::Error;
-use chrono::Duration;
 
 use hpd_graph::{HpdGraph, Node};
 use hpd_registrations::HpdRegistrationMap;

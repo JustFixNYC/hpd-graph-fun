@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
 
-use super::portfolio::{Portfolio, PortfolioMap};
 use super::hpd_registrations::HpdRegistrationMap;
+use super::portfolio::{Portfolio, PortfolioMap};
 
 #[derive(Debug)]
 pub enum Node {
@@ -68,7 +68,10 @@ pub struct HpdGraph {
 }
 
 impl HpdGraph {
-    pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>, regs: &HpdRegistrationMap) -> Result<Self, Box<dyn Error>> {
+    pub fn from_csv<T: std::io::Read>(
+        mut rdr: csv::Reader<T>,
+        regs: &HpdRegistrationMap,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut graph: HpdPetGraph = Graph::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
