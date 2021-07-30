@@ -15,81 +15,92 @@ use hpd_registrations::HpdRegistrationMap;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
-fn make_hpd_graph() -> Result<HpdGraph, Box<dyn Error>> {
-    let reg_rdr = csv::Reader::from_path("Multiple_Dwelling_Registrations.csv")?;
-    let regs = HpdRegistrationMap::from_csv(reg_rdr, Duration::days(90))?;
-
-    let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
-    HpdGraph::from_csv(rdr, &regs)
+struct Program {
+    max_expiration_age: i64,
 }
 
-fn cmd_info() -> Result<(), Box<dyn Error>> {
-    let hpd = make_hpd_graph()?;
-    let cc = connected_components(&hpd.graph);
-    println!(
-        "Read {} unique names, {} unique addresses, and {} connected components.",
-        hpd.name_nodes.len(),
-        hpd.addr_nodes.len(),
-        cc
-    );
+impl Program {
+    fn make_hpd_graph(&self) -> Result<HpdGraph, Box<dyn Error>> {
+        let reg_rdr = csv::Reader::from_path("Multiple_Dwelling_Registrations.csv")?;
+        let regs = HpdRegistrationMap::from_csv(reg_rdr, Duration::days(self.max_expiration_age))?;
 
-    Ok(())
-}
-
-fn cmd_dot(name: &String) -> Result<(), Box<dyn Error>> {
-    let hpd = make_hpd_graph()?;
-
-    if let Some(node) = hpd.find_name(&name) {
-        eprintln!(
-            "Found a matching name '{}'.",
-            hpd.graph.node_weight(node).unwrap().to_str()
-        );
-        let portfolio = hpd.portfolio_for_node(node).unwrap();
-        println!("{}", portfolio.dot_graph(&hpd.graph));
-    } else {
-        eprintln!("Unable to find a match for the name '{}'.", &name);
-        std::process::exit(1);
+        let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
+        HpdGraph::from_csv(rdr, &regs)
     }
 
-    Ok(())
-}
+    fn cmd_info(&self) -> Result<(), Box<dyn Error>> {
+        let hpd = self.make_hpd_graph()?;
+        let cc = connected_components(&hpd.graph);
+        println!(
+            "Read {} unique names, {} unique addresses, and {} connected components.",
+            hpd.name_nodes.len(),
+            hpd.addr_nodes.len(),
+            cc
+        );
 
-fn cmd_longpaths(min_length: u32) -> Result<(), Box<dyn Error>> {
-    let hpd = make_hpd_graph()?;
-    let mut visits = HashSet::new();
+        Ok(())
+    }
 
-    println!("\nPaths with minimum length {}:\n", min_length);
+    fn cmd_dot(&self, name: &String) -> Result<(), Box<dyn Error>> {
+        let hpd = self.make_hpd_graph()?;
 
-    for node in hpd.graph.node_indices() {
-        if visits.is_visited(&node) {
-            continue;
+        if let Some(node) = hpd.find_name(&name) {
+            eprintln!(
+                "Found a matching name '{}'.",
+                hpd.graph.node_weight(node).unwrap().to_str()
+            );
+            let portfolio = hpd.portfolio_for_node(node).unwrap();
+            println!("{}", portfolio.dot_graph(&hpd.graph));
+        } else {
+            eprintln!("Unable to find a match for the name '{}'.", &name);
+            std::process::exit(1);
         }
-        visits.visit(node);
-        if let Some(Node::Name(_)) = hpd.graph.node_weight(node) {
-            let mut max_cost = 0;
-            let mut max_cost_node = None;
-            let dijkstra_map = dijkstra(&hpd.graph, node, None, |_| 1);
-            for (other_node, cost) in dijkstra_map {
-                visits.visit(other_node);
-                if let Some(Node::Name(_)) = hpd.graph.node_weight(other_node) {
-                    if cost > max_cost {
-                        max_cost = cost;
-                        max_cost_node = Some(other_node);
+
+        Ok(())
+    }
+
+    fn cmd_longpaths(&self, min_length: u32) -> Result<(), Box<dyn Error>> {
+        let hpd = self.make_hpd_graph()?;
+        let mut visits = HashSet::new();
+
+        println!("\nPaths with minimum length {}:\n", min_length);
+
+        for node in hpd.graph.node_indices() {
+            if visits.is_visited(&node) {
+                continue;
+            }
+            visits.visit(node);
+            if let Some(Node::Name(_)) = hpd.graph.node_weight(node) {
+                let mut max_cost = 0;
+                let mut max_cost_node = None;
+                let dijkstra_map = dijkstra(&hpd.graph, node, None, |_| 1);
+                for (other_node, cost) in dijkstra_map {
+                    visits.visit(other_node);
+                    if let Some(Node::Name(_)) = hpd.graph.node_weight(other_node) {
+                        if cost > max_cost {
+                            max_cost = cost;
+                            max_cost_node = Some(other_node);
+                        }
+                    }
+                }
+                if max_cost >= min_length {
+                    if let Some(other_node) = max_cost_node {
+                        let (_, path) = petgraph::algo::astar(
+                            &hpd.graph,
+                            node,
+                            |n| n == other_node,
+                            |_| 1,
+                            |_| 1,
+                        )
+                        .unwrap();
+                        println!("length {} path: {}\n", max_cost, &hpd.path_to_string(path));
                     }
                 }
             }
-            if max_cost >= min_length {
-                if let Some(other_node) = max_cost_node {
-                    let (_, path) =
-                        petgraph::algo::astar(&hpd.graph, node, |n| n == other_node, |_| 1, |_| 1)
-                            .unwrap();
-                    println!("length {} path: {}\n", max_cost, &hpd.path_to_string(path));
-                }
-            }
         }
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
 
 fn main() {
@@ -99,6 +110,16 @@ fn main() {
         .author("Atul Varma <atul@justfix.nyc>")
         .about(
             "Fun with NYC Housing Preservation & Development (HPD) graph structure data analysis.",
+        )
+        .arg(
+            Arg::with_name("max-expiration-age")
+                .long("max-expiration-age")
+                .value_name("DAYS")
+                .default_value("90")
+                .takes_value(true)
+                .help(
+                    "Ignore HPD registrations that have expired more than this number of days ago",
+                ),
         )
         .subcommand(
             SubCommand::with_name("info").about("Shows general information about the graph"),
@@ -122,13 +143,17 @@ fn main() {
         )
         .get_matches();
 
+    let p = Program {
+        max_expiration_age: value_t!(matches.value_of("max-expiration-age"), i64)
+            .unwrap_or_else(|e| e.exit()),
+    };
     if let Some(matches) = matches.subcommand_matches("longpaths") {
         let min_length = value_t!(matches.value_of("min-length"), u32).unwrap_or_else(|e| e.exit());
-        cmd_longpaths(min_length).unwrap();
+        p.cmd_longpaths(min_length).unwrap();
     } else if let Some(_) = matches.subcommand_matches("info") {
-        cmd_info().unwrap();
+        p.cmd_info().unwrap();
     } else if let Some(matches) = matches.subcommand_matches("dot") {
         let name = matches.value_of("NAME").unwrap().to_owned();
-        cmd_dot(&name).unwrap();
+        p.cmd_dot(&name).unwrap();
     }
 }
