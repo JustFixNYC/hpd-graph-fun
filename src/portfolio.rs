@@ -4,15 +4,31 @@ use petgraph::visit::{Dfs, VisitMap};
 use std::collections::{HashMap, HashSet};
 
 use super::hpd_graph::HpdPetGraph;
+use super::hpd_registrations::HpdRegistrationMap;
 
 pub struct Portfolio {
     nodes: HashSet<NodeIndex<u32>>,
-    name: String,
+    pub name: String,
 }
 
 impl Portfolio {
     fn new(nodes: HashSet<NodeIndex<u32>>, name: String) -> Self {
         Portfolio { nodes, name }
+    }
+
+    pub fn building_count(&self, g: &HpdPetGraph, regs: &HpdRegistrationMap) -> usize {
+        use petgraph::visit::IntoEdgeReferences;
+
+        let g = petgraph::visit::NodeFiltered::from_fn(&g, move |g| self.nodes.is_visited(&g));
+        let mut bins = HashSet::<u32>::new();
+        for edge in g.edge_references() {
+            for reg_info in edge.weight() {
+                for reg in regs.get_by_id(reg_info.id).unwrap() {
+                    bins.insert(reg.reg_id);
+                }
+            }
+        }
+        bins.len()
     }
 
     pub fn dot_graph(&self, g: &HpdPetGraph) -> String {

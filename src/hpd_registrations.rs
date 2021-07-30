@@ -28,10 +28,10 @@ struct RawHpdRegistration {
 
 #[derive(Debug)]
 pub struct HpdRegistration {
-    reg_id: u32,
-    bbl: BBL,
-    bin: Option<u32>,
-    reg_end_date: NaiveDate,
+    pub reg_id: u32,
+    pub bbl: BBL,
+    pub bin: Option<u32>,
+    pub reg_end_date: NaiveDate,
 }
 
 pub struct HpdRegistrationMap {
@@ -77,5 +77,9 @@ impl HpdRegistrationMap {
 
     pub fn is_expired_or_invalid(&self, id: u32) -> bool {
         self.regs_by_id.get(&id).is_none()
+    }
+
+    pub fn get_by_id(&self, id: u32) -> Option<&Vec<HpdRegistration>> {
+        self.regs_by_id.get(&id)
     }
 }
