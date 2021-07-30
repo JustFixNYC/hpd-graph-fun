@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Duration};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
@@ -26,65 +26,51 @@ struct RawHpdRegistration {
     reg_end_date: String,
 }
 
+#[derive(Debug)]
 pub struct HpdRegistration {
     reg_id: u32,
     bbl: BBL,
-    bin: u32,
+    bin: Option<u32>,
     reg_end_date: NaiveDate,
 }
 
 pub struct HpdRegistrationMap {
-    regs_by_id: HashMap<u32, HpdRegistration>,
+    regs_by_id: HashMap<u32, Vec<HpdRegistration>>,
 }
 
 impl HpdRegistrationMap {
-    pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>) -> Result<Self, Box<dyn Error>> {
+    pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>, max_expiration_age: Duration) -> Result<Self, Box<dyn Error>> {
         let mut count = 0;
-        let mut regs_by_bin = HashMap::<u32, HpdRegistration>::new();
+        let mut regs_by_id = HashMap::<u32, Vec<HpdRegistration>>::new();
+        let today = chrono::offset::Local::today().naive_local();
 
         for result in rdr.deserialize() {
             let r: RawHpdRegistration = result?;
             let reg_end_date =
                 NaiveDate::parse_from_str(&r.reg_end_date.as_ref(), "%m/%d/%Y").unwrap();
             let bbl = BBL::from_numbers(r.boro, r.block, r.lot).unwrap();
-            if let Some(bin) = r.bin {
-                let should_insert = match regs_by_bin.get(&bin) {
-                    Some(reg) => reg.reg_end_date < reg_end_date,
-                    None => true
+            let age = today - reg_end_date;
+            if age < max_expiration_age {
+                let reg = HpdRegistration {
+                    reg_id: r.reg_id,
+                    reg_end_date,
+                    bbl,
+                    bin: r.bin
                 };
-                if should_insert {
-                    let reg = HpdRegistration {
-                        reg_id: r.reg_id,
-                        reg_end_date,
-                        bbl,
-                        bin
-                    };
-                    regs_by_bin.insert(reg.bin, reg);
-                }
-            } else {
-                println!("Warning: HPD registration {} ({}) has no BIN!", r.reg_id, r.reg_end_date);
+                let regs = regs_by_id.entry(r.reg_id).or_insert_with(|| vec![]);
+                regs.push(reg);
             }
             count += 1;
         }
 
-        println!("Loaded {} registrations (skipped {}).", regs_by_bin.len(), count - regs_by_bin.len());
-
-        let mut regs_by_id = HashMap::<u32, HpdRegistration>::with_capacity(regs_by_bin.len());
-
-        for (bin, reg) in regs_by_bin.into_iter() {
-            let reg_end_date = reg.reg_end_date;
-            let old = regs_by_id.insert(reg.reg_id, reg);
-            if let Some(old) = old {
-                println!("Warning: HPD registration {} is for {} ({}) and {} ({})!", old.reg_id, old.bin, old.reg_end_date, bin, reg_end_date);
-            }
-        }
+        println!("Loaded {} registrations (skipped {}).", regs_by_id.len(), count - regs_by_id.len());
 
         Ok(HpdRegistrationMap {
             regs_by_id
         })
     }
 
-    pub fn get_by_id(&self, id: u32) -> Option<&HpdRegistration> {
-        self.regs_by_id.get(&id)
+    pub fn is_expired(&self, id: u32) -> bool {
+        self.regs_by_id.get(&id).is_none()
     }
 }
