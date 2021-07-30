@@ -1,3 +1,4 @@
+mod bbl;
 mod hpd_graph;
 mod hpd_registrations;
 mod portfolio;

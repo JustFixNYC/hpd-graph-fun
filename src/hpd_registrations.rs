@@ -2,7 +2,9 @@ use serde::Deserialize;
 use std::error::Error;
 use chrono::NaiveDate;
 
-#[derive(Debug, Deserialize)]
+use super::bbl::BBL;
+
+#[derive(Deserialize)]
 struct RawHpdRegistration {
     #[serde(alias = "RegistrationID")]
     reg_id: u32,
@@ -20,6 +22,12 @@ struct RawHpdRegistration {
     reg_end_date: String,
 }
 
+struct HpdRegistration {
+    reg_id: u32,
+    bbl: BBL,
+    reg_end_date: NaiveDate,
+}
+
 pub struct HpdRegistrationMap {
 }
 
@@ -29,10 +37,13 @@ impl HpdRegistrationMap {
 
         for result in rdr.deserialize() {
             let r: RawHpdRegistration = result?;
-            let reg_end_date = NaiveDate::parse_from_str(&r.reg_end_date.as_ref(), "%m/%d/%Y");
-            if let Err(err) = reg_end_date {
-                println!("Unable to parse registration end date: {}", err);
-            }
+            let reg_end_date = NaiveDate::parse_from_str(&r.reg_end_date.as_ref(), "%m/%d/%Y").unwrap();
+            let bbl = BBL::from_numbers(r.boro,  r.block, r.lot).unwrap();
+            let reg = HpdRegistration {
+                reg_id: r.reg_id,
+                reg_end_date,
+                bbl,
+            };
             count += 1;
         }
 
