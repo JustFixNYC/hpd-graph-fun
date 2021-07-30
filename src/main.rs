@@ -46,7 +46,7 @@ impl Program {
         );
 
         if let Some(name) = name {
-            let portfolio = self.get_portfolio_with_name(&self.hpd, &name.to_owned());
+            let portfolio = self.get_portfolio_with_name(&name.to_owned());
             println!("The portfolio is '{}'.", portfolio.name);
             println!(
                 "It has {} buildings.",
@@ -57,13 +57,13 @@ impl Program {
         Ok(())
     }
 
-    fn get_portfolio_with_name<'a>(&self, hpd: &'a HpdGraph, name: &String) -> &'a Portfolio {
-        if let Some(node) = hpd.find_name(&name) {
+    fn get_portfolio_with_name(&self, name: &String) -> &Portfolio {
+        if let Some(node) = self.hpd.find_name(&name) {
             eprintln!(
                 "Found a matching name '{}'.",
-                hpd.graph.node_weight(node).unwrap().to_str()
+                self.hpd.graph.node_weight(node).unwrap().to_str()
             );
-            hpd.portfolio_for_node(node).unwrap()
+            self.hpd.portfolio_for_node(node).unwrap()
         } else {
             eprintln!("Unable to find a match for the name '{}'.", &name);
             std::process::exit(1);
@@ -71,7 +71,7 @@ impl Program {
     }
 
     fn cmd_dot(&self, name: &String) -> Result<(), Box<dyn Error>> {
-        let portfolio = self.get_portfolio_with_name(&self.hpd, name);
+        let portfolio = self.get_portfolio_with_name(name);
         println!("{}", portfolio.dot_graph(&self.hpd.graph));
         Ok(())
     }
