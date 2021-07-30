@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 // https://en.wikipedia.org/wiki/Borough,_Block_and_Lot
 
 #[repr(u8)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Boro {
     Manhattan = 1,
     Bronx = 2,
@@ -26,6 +27,7 @@ impl TryFrom<u8> for Boro {
     }
 }
 
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
 pub struct BBL {
     boro: Boro,
     block: u32,
