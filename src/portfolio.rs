@@ -3,7 +3,7 @@ use petgraph::graph::NodeIndex;
 use petgraph::visit::{Dfs, VisitMap};
 use std::collections::{HashMap, HashSet};
 
-use super::hpd_graph::HpdPetGraph;
+use super::hpd_graph::{HpdPetGraph, Node};
 use super::hpd_registrations::HpdRegistrationMap;
 
 pub struct Portfolio {
@@ -14,6 +14,33 @@ pub struct Portfolio {
 impl Portfolio {
     fn new(nodes: HashSet<NodeIndex<u32>>, name: String) -> Self {
         Portfolio { nodes, name }
+    }
+
+    pub fn get_best_name(&self, g: &HpdPetGraph) -> Option<String> {
+        let mut best: Option<(NodeIndex<u32>, usize)> = None;
+        for node in self.nodes.iter() {
+            if let Node::Name(_) = g.node_weight(*node).unwrap() {
+                let mut total_regs = 0;
+                for edge in g.edges(*node) {
+                    let reg_info = edge.weight();
+                    total_regs += reg_info.len();
+                }
+                let is_new_best = if let Some((_, current_total_regs)) = best {
+                    current_total_regs < total_regs
+                } else {
+                    true
+                };
+                if is_new_best {
+                    best = Some((*node, total_regs));
+                }
+            }
+        }
+        if let Some((node_idx, _)) = best {
+            let node = g.node_weight(node_idx).unwrap();
+            Some(node.to_str().to_owned())
+        } else {
+            None
+        }
     }
 
     pub fn building_count(&self, g: &HpdPetGraph, regs: &HpdRegistrationMap) -> usize {

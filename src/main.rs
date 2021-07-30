@@ -52,6 +52,7 @@ impl Program {
                 "It has {} buildings.",
                 portfolio.building_count(&self.hpd.graph, &self.regs)
             );
+            println!("The best name for this portfolio would be '{}'.", portfolio.get_best_name(&self.hpd.graph).unwrap());
         }
 
         Ok(())
