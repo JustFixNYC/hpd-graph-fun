@@ -17,10 +17,10 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 fn make_hpd_graph() -> Result<HpdGraph, Box<dyn Error>> {
     let reg_rdr = csv::Reader::from_path("Multiple_Dwelling_Registrations.csv")?;
-    HpdRegistrationMap::from_csv(reg_rdr, Duration::days(90))?;
+    let regs = HpdRegistrationMap::from_csv(reg_rdr, Duration::days(90))?;
 
     let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
-    HpdGraph::from_csv(rdr)
+    HpdGraph::from_csv(rdr, &regs)
 }
 
 fn cmd_info() -> Result<(), Box<dyn Error>> {

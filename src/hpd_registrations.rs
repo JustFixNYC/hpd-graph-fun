@@ -70,7 +70,7 @@ impl HpdRegistrationMap {
         })
     }
 
-    pub fn is_expired(&self, id: u32) -> bool {
+    pub fn is_expired_or_invalid(&self, id: u32) -> bool {
         self.regs_by_id.get(&id).is_none()
     }
 }

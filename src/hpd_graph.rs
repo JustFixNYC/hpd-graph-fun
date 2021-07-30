@@ -5,6 +5,7 @@ use std::error::Error;
 use std::rc::Rc;
 
 use super::portfolio::{Portfolio, PortfolioMap};
+use super::hpd_registrations::HpdRegistrationMap;
 
 #[derive(Debug)]
 pub enum Node {
@@ -67,7 +68,7 @@ pub struct HpdGraph {
 }
 
 impl HpdGraph {
-    pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>) -> Result<Self, Box<dyn Error>> {
+    pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>, regs: &HpdRegistrationMap) -> Result<Self, Box<dyn Error>> {
         let mut graph: HpdPetGraph = Graph::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
@@ -81,6 +82,9 @@ impl HpdGraph {
                     }
                     let has_full_name = record.first_name != "" && record.last_name != "";
                     if !(has_full_name || record.corp_name != "") {
+                        continue;
+                    }
+                    if regs.is_expired_or_invalid(record.reg_id) {
                         continue;
                     }
                     let name = if has_full_name {
