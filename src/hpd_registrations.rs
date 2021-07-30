@@ -1,6 +1,6 @@
+use chrono::NaiveDate;
 use serde::Deserialize;
 use std::error::Error;
-use chrono::NaiveDate;
 
 use super::bbl::BBL;
 
@@ -28,8 +28,7 @@ struct HpdRegistration {
     reg_end_date: NaiveDate,
 }
 
-pub struct HpdRegistrationMap {
-}
+pub struct HpdRegistrationMap {}
 
 impl HpdRegistrationMap {
     pub fn from_csv<T: std::io::Read>(mut rdr: csv::Reader<T>) -> Result<Self, Box<dyn Error>> {
@@ -37,8 +36,9 @@ impl HpdRegistrationMap {
 
         for result in rdr.deserialize() {
             let r: RawHpdRegistration = result?;
-            let reg_end_date = NaiveDate::parse_from_str(&r.reg_end_date.as_ref(), "%m/%d/%Y").unwrap();
-            let bbl = BBL::from_numbers(r.boro,  r.block, r.lot).unwrap();
+            let reg_end_date =
+                NaiveDate::parse_from_str(&r.reg_end_date.as_ref(), "%m/%d/%Y").unwrap();
+            let bbl = BBL::from_numbers(r.boro, r.block, r.lot).unwrap();
             let reg = HpdRegistration {
                 reg_id: r.reg_id,
                 reg_end_date,
