@@ -19,7 +19,7 @@ impl Portfolio {
     pub fn building_count(&self, g: &HpdPetGraph, regs: &HpdRegistrationMap) -> usize {
         use petgraph::visit::IntoEdgeReferences;
 
-        let g = petgraph::visit::NodeFiltered::from_fn(&g, move |g| self.nodes.is_visited(&g));
+        let g = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
         let mut bins = HashSet::<u32>::new();
         for edge in g.edge_references() {
             for reg_info in edge.weight() {
@@ -32,7 +32,7 @@ impl Portfolio {
     }
 
     pub fn dot_graph(&self, g: &HpdPetGraph) -> String {
-        let g = petgraph::visit::NodeFiltered::from_fn(&g, move |g| self.nodes.is_visited(&g));
+        let g = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
         let d = Dot::with_attr_getters(
             &g,
             &[Config::EdgeNoLabel, Config::NodeNoLabel],
