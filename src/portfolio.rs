@@ -65,7 +65,15 @@ impl Portfolio {
             &g,
             &[Config::EdgeNoLabel, Config::NodeNoLabel],
             &|_, edge| format!("label=\"{}\"", edge.weight().len()),
-            &|_, (_, whatever)| format!("label=\"{}\"", whatever.to_str()),
+            &|_, (_, node)| match node {
+                Node::BizAddr(addr) => {
+                    format!(
+                        "label=\"{}\", color=lightblue2, style=filled, shape=box",
+                        addr
+                    )
+                }
+                Node::Name(name) => format!("label=\"{}\", color=whitesmoke, style=filled", name),
+            },
         );
 
         format!("// {}\n\n{:?}", self.name, d)
