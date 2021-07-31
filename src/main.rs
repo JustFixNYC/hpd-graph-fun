@@ -36,7 +36,7 @@ impl Program {
         Ok(Program { regs, hpd })
     }
 
-    fn cmd_info(&self, name: Option<&str>) -> Result<(), Box<dyn Error>> {
+    fn cmd_info(&self, name: Option<&str>) {
         let cc = connected_components(&self.hpd.graph);
         println!(
             "Read {} unique names, {} unique addresses, and {} connected components.",
@@ -57,8 +57,6 @@ impl Program {
                 portfolio.get_best_name(&self.hpd.graph).unwrap()
             );
         }
-
-        Ok(())
     }
 
     fn get_portfolio_with_name(&self, name: &String) -> &Portfolio {
@@ -74,13 +72,12 @@ impl Program {
         }
     }
 
-    fn cmd_dot(&self, name: &String) -> Result<(), Box<dyn Error>> {
+    fn cmd_dot(&self, name: &String) {
         let portfolio = self.get_portfolio_with_name(name);
         println!("{}", portfolio.dot_graph(&self.hpd.graph));
-        Ok(())
     }
 
-    fn cmd_longpaths(&self, min_length: u32) -> Result<(), Box<dyn Error>> {
+    fn cmd_longpaths(&self, min_length: u32) {
         let mut visits = HashSet::new();
 
         println!("\nPaths with minimum length {}:\n", min_length);
@@ -122,8 +119,6 @@ impl Program {
                 }
             }
         }
-
-        Ok(())
     }
 }
 
@@ -175,15 +170,12 @@ fn main() {
     };
     if let Some(matches) = matches.subcommand_matches("longpaths") {
         let min_length = value_t!(matches.value_of("min-length"), u32).unwrap_or_else(|e| e.exit());
-        Program::new(args)
-            .unwrap()
-            .cmd_longpaths(min_length)
-            .unwrap();
+        Program::new(args).unwrap().cmd_longpaths(min_length);
     } else if let Some(matches) = matches.subcommand_matches("info") {
         let name = matches.value_of("NAME");
-        Program::new(args).unwrap().cmd_info(name).unwrap();
+        Program::new(args).unwrap().cmd_info(name);
     } else if let Some(matches) = matches.subcommand_matches("dot") {
         let name = matches.value_of("NAME").unwrap().to_owned();
-        Program::new(args).unwrap().cmd_dot(&name).unwrap();
+        Program::new(args).unwrap().cmd_dot(&name);
     }
 }
