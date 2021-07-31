@@ -64,7 +64,7 @@ pub struct HpdGraph {
     pub graph: HpdPetGraph,
     pub name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     pub addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
-    portfolios: PortfolioMap,
+    pub portfolios: PortfolioMap,
 }
 
 impl HpdGraph {

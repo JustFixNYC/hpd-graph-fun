@@ -111,6 +111,10 @@ impl PortfolioMap {
         }
     }
 
+    pub fn all(&self) -> &Vec<Portfolio> {
+        &self.portfolios
+    }
+
     pub fn for_node(&self, node: NodeIndex<u32>) -> Option<&Portfolio> {
         if let Some(idx) = self.node_portfolios.get(&node) {
             Some(&self.portfolios[*idx])

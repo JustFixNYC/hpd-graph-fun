@@ -77,6 +77,26 @@ impl Program {
         println!("{}", portfolio.dot_graph(&self.hpd.graph));
     }
 
+    fn cmd_ranking(&self) {
+        let mut ranking: Vec<(&Portfolio, usize)> = vec![];
+
+        for portfolio in self.hpd.portfolios.all() {
+            let size = portfolio.building_count(&self.hpd.graph, &self.regs);
+            ranking.push((portfolio, size));
+        }
+
+        ranking.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        ranking.reverse();
+
+        for (portfolio, size) in ranking {
+            let name = portfolio.get_best_name(&self.hpd.graph).unwrap();
+            println!(
+                "{} ({}'s portfolio) - {} buildings",
+                portfolio.name, name, size
+            );
+        }
+    }
+
     fn cmd_longpaths(&self, min_length: u32) {
         let mut visits = HashSet::new();
 
@@ -162,6 +182,9 @@ fn main() {
                 .about("Output a dot graph of a particular portfolio")
                 .arg(Arg::with_name("NAME").required(true)),
         )
+        .subcommand(
+            SubCommand::with_name("ranking").about("Show a ranking of the largest portfolios"),
+        )
         .get_matches();
 
     let args = ProgramArgs {
@@ -177,5 +200,7 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("dot") {
         let name = matches.value_of("NAME").unwrap().to_owned();
         Program::new(args).unwrap().cmd_dot(&name);
+    } else if let Some(_) = matches.subcommand_matches("ranking") {
+        Program::new(args).unwrap().cmd_ranking();
     }
 }
