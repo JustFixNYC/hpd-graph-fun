@@ -44,14 +44,15 @@ impl Portfolio {
     }
 
     pub fn building_count(&self, g: &HpdPetGraph, regs: &HpdRegistrationMap) -> usize {
-        use petgraph::visit::IntoEdgeReferences;
-
-        let g = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
         let mut bins = HashSet::<u32>::new();
-        for edge in g.edge_references() {
-            for reg_info in edge.weight() {
-                for reg in regs.get_by_id(reg_info.id).unwrap() {
-                    bins.insert(reg.reg_id);
+        for node in self.nodes.iter() {
+            if let Node::Name(_) = g.node_weight(*node).unwrap() {
+                for edge in g.edges(*node) {
+                    for reg_info in edge.weight() {
+                        for reg in regs.get_by_id(reg_info.id).unwrap() {
+                            bins.insert(reg.reg_id);
+                        }
+                    }
                 }
             }
         }
