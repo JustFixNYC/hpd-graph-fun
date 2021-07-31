@@ -71,6 +71,7 @@ impl HpdGraph {
     pub fn from_csv<T: std::io::Read>(
         mut rdr: csv::Reader<T>,
         regs: &HpdRegistrationMap,
+        include_corps: bool,
     ) -> Result<Self, Box<dyn Error>> {
         let mut graph: HpdPetGraph = Graph::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
@@ -84,7 +85,7 @@ impl HpdGraph {
                         continue;
                     }
                     let has_full_name = record.first_name != "" && record.last_name != "";
-                    if !(has_full_name || record.corp_name != "") {
+                    if !(has_full_name || (include_corps && record.corp_name != "")) {
                         continue;
                     }
                     if regs.is_expired_or_invalid(record.reg_id) {

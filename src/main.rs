@@ -18,6 +18,7 @@ const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 struct ProgramArgs {
     max_expiration_age: i64,
+    include_corps: bool,
 }
 
 struct Program {
@@ -31,7 +32,7 @@ impl Program {
         let regs = HpdRegistrationMap::from_csv(reg_rdr, Duration::days(args.max_expiration_age))?;
 
         let rdr = csv::Reader::from_path("Registration_Contacts.csv")?;
-        let hpd = HpdGraph::from_csv(rdr, &regs).unwrap();
+        let hpd = HpdGraph::from_csv(rdr, &regs, args.include_corps).unwrap();
 
         Ok(Program { regs, hpd })
     }
@@ -161,6 +162,11 @@ fn main() {
                     "Ignore HPD registrations that have expired more than this number of days ago",
                 ),
         )
+        .arg(
+            Arg::with_name("include-corps")
+                .long("include-corps")
+                .help("Include corporation names in portfolios"),
+        )
         .subcommand(
             SubCommand::with_name("info")
                 .about("Shows general information about the graph")
@@ -200,6 +206,7 @@ fn main() {
     let args = ProgramArgs {
         max_expiration_age: value_t!(matches.value_of("max-expiration-age"), i64)
             .unwrap_or_else(|e| e.exit()),
+        include_corps: matches.is_present("include-corps"),
     };
     if let Some(matches) = matches.subcommand_matches("longpaths") {
         let min_length = value_t!(matches.value_of("min-length"), u32).unwrap_or_else(|e| e.exit());
