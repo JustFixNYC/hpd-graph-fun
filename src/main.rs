@@ -77,12 +77,14 @@ impl Program {
         println!("{}", portfolio.dot_graph(&self.hpd.graph));
     }
 
-    fn cmd_ranking(&self) {
+    fn cmd_ranking(&self, min_buildings: usize) {
         let mut ranking: Vec<(&Portfolio, usize)> = vec![];
 
         for portfolio in self.hpd.portfolios.all() {
             let size = portfolio.building_count(&self.hpd.graph, &self.regs);
-            ranking.push((portfolio, size));
+            if size >= min_buildings {
+                ranking.push((portfolio, size));
+            }
         }
 
         ranking.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
@@ -182,7 +184,16 @@ fn main() {
                 .arg(Arg::with_name("NAME").required(true)),
         )
         .subcommand(
-            SubCommand::with_name("ranking").about("Show a ranking of the largest portfolios"),
+            SubCommand::with_name("ranking")
+                .about("Show a ranking of the largest portfolios")
+                .arg(
+                    Arg::with_name("min-buildings")
+                        .short("b")
+                        .long("min-buildings")
+                        .default_value("0")
+                        .help("Only show portfolios of a minimum size")
+                        .takes_value(true),
+                ),
         )
         .get_matches();
 
@@ -199,7 +210,9 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("dot") {
         let name = matches.value_of("NAME").unwrap().to_owned();
         Program::new(args).unwrap().cmd_dot(&name);
-    } else if let Some(_) = matches.subcommand_matches("ranking") {
-        Program::new(args).unwrap().cmd_ranking();
+    } else if let Some(matches) = matches.subcommand_matches("ranking") {
+        let min_buildings =
+            value_t!(matches.value_of("min-buildings"), usize).unwrap_or_else(|e| e.exit());
+        Program::new(args).unwrap().cmd_ranking(min_buildings);
     }
 }
