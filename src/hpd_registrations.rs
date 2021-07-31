@@ -66,7 +66,7 @@ impl HpdRegistrationMap {
             count += 1;
         }
 
-        println!(
+        eprintln!(
             "Loaded {} registrations (skipped {}).",
             regs_by_id.len(),
             count - regs_by_id.len()
