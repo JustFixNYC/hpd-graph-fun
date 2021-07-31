@@ -88,12 +88,11 @@ impl Program {
         ranking.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
         ranking.reverse();
 
+        let mut rank = 1;
         for (portfolio, size) in ranking {
             let name = portfolio.get_best_name(&self.hpd.graph).unwrap();
-            println!(
-                "{} ({}'s portfolio) - {} buildings",
-                portfolio.name, name, size
-            );
+            println!("{}. {}'s portfolio - {} buildings", rank, name, size);
+            rank += 1;
         }
     }
 
