@@ -55,7 +55,7 @@ impl Portfolio {
         }
 
         let option = self.cached_name.borrow();
-        Rc::clone(&option.as_ref().unwrap())
+        Rc::clone(option.as_ref().unwrap())
     }
 
     fn get_best_name(&self, g: &HpdPetGraph) -> Option<String> {
