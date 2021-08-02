@@ -2,6 +2,7 @@ mod bbl;
 mod hpd_graph;
 mod hpd_registrations;
 mod portfolio;
+mod ranking;
 
 use chrono::Duration;
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
@@ -13,6 +14,7 @@ use std::error::Error;
 use hpd_graph::{HpdGraph, Node};
 use hpd_registrations::HpdRegistrationMap;
 use portfolio::Portfolio;
+use ranking::rank_tuples;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -92,8 +94,7 @@ impl Program {
             }
         }
 
-        ranking.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        ranking.reverse();
+        rank_tuples(&mut ranking);
 
         let mut rank = 1;
         for (portfolio, size) in ranking {

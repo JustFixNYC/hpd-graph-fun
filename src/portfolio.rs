@@ -7,6 +7,7 @@ use std::rc::Rc;
 
 use super::hpd_graph::{HpdPetGraph, Node};
 use super::hpd_registrations::HpdRegistrationMap;
+use super::ranking::rank_tuples;
 
 fn get_hpd_reg_contact_count(g: &HpdPetGraph, node: &NodeIndex<u32>) -> usize {
     let mut total = 0;
@@ -39,8 +40,7 @@ impl Portfolio {
             }
         }
 
-        result.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-        result.reverse();
+        rank_tuples(&mut result);
         result
     }
 
