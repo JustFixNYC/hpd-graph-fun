@@ -39,7 +39,7 @@ impl Program {
         Ok(Program { regs, hpd })
     }
 
-    fn cmd_info(&self, name: Option<&str>) {
+    fn cmd_info(&self, name: Option<&str>, top: usize) {
         let cc = connected_components(&self.hpd.graph);
         println!(
             "Read {} unique names, {} unique addresses, and {} connected components.",
@@ -58,7 +58,7 @@ impl Program {
 
             let bizaddrs = portfolio.rank_bizaddrs(&self.hpd.graph);
             println!("\nThe most frequent business addresses mentioned in the portfolio are:\n");
-            for (bizaddr, total_regs) in bizaddrs.iter().take(5) {
+            for (bizaddr, total_regs) in bizaddrs.iter().take(top) {
                 println!(
                     "{} (mentioned in {} HPD registration contacts)",
                     bizaddr, total_regs
@@ -67,7 +67,7 @@ impl Program {
 
             let names = portfolio.rank_names(&self.hpd.graph);
             println!("\nThe most frequent names mentioned in the portfolio are:\n");
-            for (name, total_regs) in names.iter().take(5) {
+            for (name, total_regs) in names.iter().take(top) {
                 println!(
                     "{} (mentioned in {} HPD registration contacts)",
                     name, total_regs
@@ -185,7 +185,16 @@ fn main() {
         .subcommand(
             SubCommand::with_name("info")
                 .about("Shows general information about the graph")
-                .arg(Arg::with_name("NAME")),
+                .arg(Arg::with_name("NAME"))
+                .arg(
+                    Arg::with_name("top")
+                        .short("t")
+                        .long("top")
+                        .value_name("N")
+                        .default_value("5")
+                        .help("Show the top N names and business addresses in the portfolio")
+                        .takes_value(true),
+                ),
         )
         .subcommand(
             SubCommand::with_name("longpaths")
@@ -228,7 +237,8 @@ fn main() {
         Program::new(args).unwrap().cmd_longpaths(min_length);
     } else if let Some(matches) = matches.subcommand_matches("info") {
         let name = matches.value_of("NAME");
-        Program::new(args).unwrap().cmd_info(name);
+        let top = value_t!(matches.value_of("top"), usize).unwrap_or_else(|e| e.exit());
+        Program::new(args).unwrap().cmd_info(name, top);
     } else if let Some(matches) = matches.subcommand_matches("dot") {
         let name = matches.value_of("NAME").unwrap().to_owned();
         Program::new(args).unwrap().cmd_dot(&name);
