@@ -44,6 +44,19 @@ impl Portfolio {
         result
     }
 
+    pub fn rank_names(&self, g: &HpdPetGraph) -> Vec<(Rc<String>, usize)> {
+        let mut result = vec![];
+
+        for node in self.nodes.iter() {
+            if let Node::Name(name) = g.node_weight(*node).unwrap() {
+                result.push((Rc::clone(name), get_hpd_reg_contact_count(g, node)));
+            }
+        }
+
+        rank_tuples(&mut result);
+        result
+    }
+
     pub fn name(&self, g: &HpdPetGraph) -> Rc<String> {
         if self.cached_name.borrow().is_none() {
             let mut option = self.cached_name.borrow_mut();

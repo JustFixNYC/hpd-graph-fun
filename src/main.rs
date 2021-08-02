@@ -55,12 +55,22 @@ impl Program {
                 "It has {} buildings.",
                 portfolio.building_count(&self.hpd.graph, &self.regs)
             );
+
             let bizaddrs = portfolio.rank_bizaddrs(&self.hpd.graph);
             println!("\nThe most frequent business addresses mentioned in the portfolio are:\n");
             for (bizaddr, total_regs) in bizaddrs.iter().take(5) {
                 println!(
                     "{} (mentioned in {} HPD registration contacts)",
                     bizaddr, total_regs
+                );
+            }
+
+            let names = portfolio.rank_names(&self.hpd.graph);
+            println!("\nThe most frequent names mentioned in the portfolio are:\n");
+            for (name, total_regs) in names.iter().take(5) {
+                println!(
+                    "{} (mentioned in {} HPD registration contacts)",
+                    name, total_regs
                 );
             }
         }
