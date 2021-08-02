@@ -96,14 +96,16 @@ impl HpdGraph {
                     } else {
                         Rc::new(record.corp_name)
                     };
-                    let addr = Rc::new(format!(
+                    let mut addr_string = format!(
                         "{} {} {}, {} {}",
                         record.house_no,
                         record.street_name,
                         record.apt_no,
                         record.city,
                         record.state
-                    ));
+                    );
+                    addr_string.make_ascii_uppercase();
+                    let addr = Rc::new(addr_string);
                     let addr_node = *addr_nodes
                         .entry(Rc::clone(&addr))
                         .or_insert_with(|| graph.add_node(Node::BizAddr(Rc::clone(&addr))));
