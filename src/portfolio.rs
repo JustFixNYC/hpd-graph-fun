@@ -1,6 +1,7 @@
 use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{Dfs, VisitMap};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
@@ -18,11 +19,15 @@ fn get_hpd_reg_contact_count(g: &HpdPetGraph, node: &NodeIndex<u32>) -> usize {
 
 pub struct Portfolio {
     nodes: HashSet<NodeIndex<u32>>,
+    cached_name: RefCell<Option<Rc<String>>>,
 }
 
 impl Portfolio {
     fn new(nodes: HashSet<NodeIndex<u32>>) -> Self {
-        Portfolio { nodes }
+        Portfolio {
+            nodes,
+            cached_name: RefCell::new(None),
+        }
     }
 
     pub fn rank_bizaddrs(&self, g: &HpdPetGraph) -> Vec<(Rc<String>, usize)> {
@@ -39,7 +44,21 @@ impl Portfolio {
         result
     }
 
-    pub fn get_best_name(&self, g: &HpdPetGraph) -> Option<String> {
+    pub fn name(&self, g: &HpdPetGraph) -> Rc<String> {
+        if self.cached_name.borrow().is_none() {
+            let mut option = self.cached_name.borrow_mut();
+            let name = format!(
+                "{}'s portfolio",
+                self.get_best_name(g).unwrap_or("???".to_owned())
+            );
+            option.replace(Rc::new(name));
+        }
+
+        let option = self.cached_name.borrow();
+        Rc::clone(&option.as_ref().unwrap())
+    }
+
+    fn get_best_name(&self, g: &HpdPetGraph) -> Option<String> {
         let mut best: Option<(NodeIndex<u32>, usize)> = None;
         for node in self.nodes.iter() {
             if let Node::Name(_) = g.node_weight(*node).unwrap() {

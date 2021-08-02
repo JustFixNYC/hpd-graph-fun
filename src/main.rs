@@ -48,10 +48,7 @@ impl Program {
 
         if let Some(name) = name {
             let portfolio = self.get_portfolio_with_name(&name.to_owned());
-            println!(
-                "This is {}'s portfolio.",
-                portfolio.get_best_name(&self.hpd.graph).unwrap()
-            );
+            println!("This is {}.", portfolio.name(&self.hpd.graph));
             println!(
                 "It has {} buildings.",
                 portfolio.building_count(&self.hpd.graph, &self.regs)
@@ -100,8 +97,8 @@ impl Program {
 
         let mut rank = 1;
         for (portfolio, size) in ranking {
-            let name = portfolio.get_best_name(&self.hpd.graph).unwrap();
-            println!("{}. {}'s portfolio - {} buildings", rank, name, size);
+            let name = portfolio.name(&self.hpd.graph);
+            println!("{}. {} - {} buildings", rank, name, size);
             rank += 1;
         }
     }
