@@ -48,15 +48,22 @@ impl Program {
 
         if let Some(name) = name {
             let portfolio = self.get_portfolio_with_name(&name.to_owned());
-            println!("The portfolio is '{}'.", portfolio.name);
+            println!(
+                "This is {}'s portfolio.",
+                portfolio.get_best_name(&self.hpd.graph).unwrap()
+            );
             println!(
                 "It has {} buildings.",
                 portfolio.building_count(&self.hpd.graph, &self.regs)
             );
-            println!(
-                "The best name for this portfolio would be '{}'.",
-                portfolio.get_best_name(&self.hpd.graph).unwrap()
-            );
+            let bizaddrs = portfolio.rank_bizaddrs(&self.hpd.graph);
+            println!("\nThe most frequent business addresses mentioned in the portfolio are:\n");
+            for (bizaddr, total_regs) in bizaddrs.iter().take(5) {
+                println!(
+                    "{} (mentioned in {} HPD registration contacts)",
+                    bizaddr, total_regs
+                );
+            }
         }
     }
 

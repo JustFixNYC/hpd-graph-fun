@@ -2,6 +2,7 @@ use petgraph::dot::{Config, Dot};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::{Dfs, VisitMap};
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
 use super::hpd_graph::{HpdPetGraph, Node};
 use super::hpd_registrations::HpdRegistrationMap;
@@ -14,6 +15,25 @@ pub struct Portfolio {
 impl Portfolio {
     fn new(nodes: HashSet<NodeIndex<u32>>, name: String) -> Self {
         Portfolio { nodes, name }
+    }
+
+    pub fn rank_bizaddrs(&self, g: &HpdPetGraph) -> Vec<(Rc<String>, usize)> {
+        let mut result = vec![];
+
+        for node in self.nodes.iter() {
+            if let Node::BizAddr(name) = g.node_weight(*node).unwrap() {
+                let mut total_regs = 0;
+                for edge in g.edges(*node) {
+                    let reg_info = edge.weight();
+                    total_regs += reg_info.len();
+                }
+                result.push((Rc::clone(name), total_regs));
+            }
+        }
+
+        result.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        result.reverse();
+        result
     }
 
     pub fn get_best_name(&self, g: &HpdPetGraph) -> Option<String> {
