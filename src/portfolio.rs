@@ -7,6 +7,15 @@ use std::rc::Rc;
 use super::hpd_graph::{HpdPetGraph, Node};
 use super::hpd_registrations::HpdRegistrationMap;
 
+fn get_hpd_reg_contact_count(g: &HpdPetGraph, node: &NodeIndex<u32>) -> usize {
+    let mut total = 0;
+    for edge in g.edges(*node) {
+        let reg_info = edge.weight();
+        total += reg_info.len();
+    }
+    total
+}
+
 pub struct Portfolio {
     nodes: HashSet<NodeIndex<u32>>,
     pub name: String,
@@ -22,12 +31,7 @@ impl Portfolio {
 
         for node in self.nodes.iter() {
             if let Node::BizAddr(name) = g.node_weight(*node).unwrap() {
-                let mut total_regs = 0;
-                for edge in g.edges(*node) {
-                    let reg_info = edge.weight();
-                    total_regs += reg_info.len();
-                }
-                result.push((Rc::clone(name), total_regs));
+                result.push((Rc::clone(name), get_hpd_reg_contact_count(g, node)));
             }
         }
 
@@ -40,18 +44,14 @@ impl Portfolio {
         let mut best: Option<(NodeIndex<u32>, usize)> = None;
         for node in self.nodes.iter() {
             if let Node::Name(_) = g.node_weight(*node).unwrap() {
-                let mut total_regs = 0;
-                for edge in g.edges(*node) {
-                    let reg_info = edge.weight();
-                    total_regs += reg_info.len();
-                }
-                let is_new_best = if let Some((_, current_total_regs)) = best {
-                    current_total_regs < total_regs
+                let count = get_hpd_reg_contact_count(g, node);
+                let is_new_best = if let Some((_, current_count)) = best {
+                    current_count < count
                 } else {
                     true
                 };
                 if is_new_best {
-                    best = Some((*node, total_regs));
+                    best = Some((*node, count));
                 }
             }
         }
