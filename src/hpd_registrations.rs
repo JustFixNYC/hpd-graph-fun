@@ -6,7 +6,7 @@ use std::error::Error;
 use super::bbl::BBL;
 
 #[derive(Deserialize)]
-struct RawHpdRegistration {
+struct RawHpdRegistration<'a> {
     #[serde(alias = "RegistrationID")]
     reg_id: u32,
 
@@ -23,7 +23,7 @@ struct RawHpdRegistration {
     bin: Option<u32>,
 
     #[serde(alias = "RegistrationEndDate")]
-    reg_end_date: String,
+    reg_end_date: &'a str,
 }
 
 #[derive(Debug)]
@@ -46,9 +46,11 @@ impl HpdRegistrationMap {
         let mut count = 0;
         let mut regs_by_id = HashMap::<u32, Vec<HpdRegistration>>::new();
         let today = chrono::offset::Local::today().naive_local();
+        let mut raw_record = csv::StringRecord::new();
+        let headers = rdr.headers()?.clone();
 
-        for result in rdr.deserialize() {
-            let r: RawHpdRegistration = result?;
+        while rdr.read_record(&mut raw_record)? {
+            let r: RawHpdRegistration = raw_record.deserialize(Some(&headers))?;
             let reg_end_date =
                 NaiveDate::parse_from_str(&r.reg_end_date.as_ref(), "%m/%d/%Y").unwrap();
             let bbl = BBL::from_numbers(r.boro, r.block, r.lot).unwrap();
