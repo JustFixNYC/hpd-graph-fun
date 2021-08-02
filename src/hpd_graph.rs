@@ -6,6 +6,7 @@ use std::rc::Rc;
 
 use super::hpd_registrations::HpdRegistrationMap;
 use super::portfolio::{Portfolio, PortfolioMap};
+use super::synonyms::Synonyms;
 
 #[derive(Debug)]
 pub enum Node {
@@ -73,6 +74,7 @@ impl HpdGraph {
         regs: &HpdRegistrationMap,
         include_corps: bool,
     ) -> Result<Self, Box<dyn Error>> {
+        let synonyms = Synonyms::new();
         let mut graph: HpdPetGraph = Graph::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
@@ -94,11 +96,14 @@ impl HpdGraph {
                     if regs.is_expired_or_invalid(record.reg_id) {
                         continue;
                     }
-                    let name = if has_full_name {
-                        Rc::new(format!("{} {}", record.first_name, record.last_name))
+                    let name_string = if has_full_name {
+                        format!("{} {}", record.first_name, record.last_name)
                     } else {
-                        Rc::new(record.corp_name.to_owned())
+                        record.corp_name.to_owned()
                     };
+                    let name = synonyms
+                        .get(&name_string)
+                        .unwrap_or_else(|| Rc::new(name_string));
                     let mut addr_string = format!(
                         "{} {} {}, {} {}",
                         record.house_no,

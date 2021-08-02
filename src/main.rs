@@ -3,6 +3,7 @@ mod hpd_graph;
 mod hpd_registrations;
 mod portfolio;
 mod ranking;
+mod synonyms;
 
 use chrono::Duration;
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
