@@ -35,25 +35,25 @@ pub struct RegInfo {
 }
 
 #[derive(Debug, Deserialize)]
-struct HpdRegistrationContact {
+struct HpdRegistrationContact<'a> {
     #[serde(alias = "CorporationName")]
-    corp_name: String,
+    corp_name: &'a str,
     #[serde(alias = "FirstName")]
-    first_name: String,
+    first_name: &'a str,
     #[serde(alias = "LastName")]
-    last_name: String,
+    last_name: &'a str,
     #[serde(alias = "Type")]
-    _type: String,
+    _type: &'a str,
     #[serde(alias = "BusinessHouseNumber")]
-    house_no: String,
+    house_no: &'a str,
     #[serde(alias = "BusinessStreetName")]
-    street_name: String,
+    street_name: &'a str,
     #[serde(alias = "BusinessApartment")]
-    apt_no: String,
+    apt_no: &'a str,
     #[serde(alias = "BusinessCity")]
-    city: String,
+    city: &'a str,
     #[serde(alias = "BusinessState")]
-    state: String,
+    state: &'a str,
     #[serde(alias = "RegistrationContactID")]
     reg_contact_id: u32,
     #[serde(alias = "RegistrationID")]
@@ -77,8 +77,11 @@ impl HpdGraph {
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
-        for result in rdr.deserialize() {
-            let record: HpdRegistrationContact = result?;
+        let mut raw_record = csv::StringRecord::new();
+        let headers = rdr.headers()?.clone();
+
+        while rdr.read_record(&mut raw_record)? {
+            let record: HpdRegistrationContact = raw_record.deserialize(Some(&headers))?;
             match record._type.as_ref() {
                 "HeadOfficer" | "IndividualOwner" | "CorporateOwner" => {
                     if record.house_no == "" || record.street_name == "" {
@@ -94,7 +97,7 @@ impl HpdGraph {
                     let name = if has_full_name {
                         Rc::new(format!("{} {}", record.first_name, record.last_name))
                     } else {
-                        Rc::new(record.corp_name)
+                        Rc::new(record.corp_name.to_owned())
                     };
                     let mut addr_string = format!(
                         "{} {} {}, {} {}",
