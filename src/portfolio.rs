@@ -60,9 +60,9 @@ impl Portfolio {
     }
 
     pub fn dot_graph(&self, g: &HpdPetGraph) -> String {
-        let g = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
+        let gf = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
         let d = Dot::with_attr_getters(
-            &g,
+            &gf,
             &[Config::EdgeNoLabel, Config::NodeNoLabel],
             &|_, edge| format!("label=\"{}\"", edge.weight().len()),
             &|_, (_, node)| match node {
@@ -76,7 +76,11 @@ impl Portfolio {
             },
         );
 
-        format!("// {}\n\n{:?}", self.name, d)
+        format!(
+            "// {}'s portfolio\n\n{:?}",
+            self.get_best_name(g).unwrap_or(self.name.clone()),
+            d
+        )
     }
 }
 
