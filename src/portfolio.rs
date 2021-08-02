@@ -114,11 +114,7 @@ impl Portfolio {
             },
         );
 
-        format!(
-            "// {}'s portfolio\n\n{:?}",
-            self.get_best_name(g).unwrap_or("???".to_owned()),
-            d
-        )
+        format!("// {}\n\n{:?}", self.name(g), d)
     }
 }
 
