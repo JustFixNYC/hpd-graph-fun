@@ -83,6 +83,7 @@ impl LocalBridgeFinder {
 
         for (from, to_list) in self.tree_edges.iter() {
             for to in to_list {
+                // println!("Evaluating ({}, {}).", from.index(), to.index());
                 if let Some(true) = self.is_local_bridge(*from, *to) {
                     result.push((*from, *to));
                 }

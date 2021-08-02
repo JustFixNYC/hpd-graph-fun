@@ -75,6 +75,11 @@ impl Program {
                     name, total_regs
                 );
             }
+
+            println!(
+                "\n{} local bridges are in the portfolio.\n",
+                portfolio.find_local_bridges(&self.hpd.graph).len()
+            );
         }
     }
 
