@@ -1,4 +1,10 @@
-This is an attempt to create an undirected graph structure of NYC Housing Preservation & Development (HPD) records with the following properties:
+`hpd` is a command-line tool that attempts to create an graph structure of NYC Housing Preservation & Development (HPD) records, along with various subcommands to analyze the graph.
+
+It uses CSV data directly from NYC's open data portal and does not require a database.
+
+## About the graph
+
+The graph is undirected and has the following properties:
 
 1. Each individual name (and, optionally, corporation name) is a node.
 
@@ -11,8 +17,6 @@ Portfolios are then inferred by finding strongly connected components within the
 This algorithm was created by Sam Rabiyah, Samara Trilling, and Atul Varma during the week of July 26, 2021.
 
 ## Quick start
-
-A command-line tool called `hpd` provides various subcommands to analyze the graph. It uses CSV data directly from NYC's open data portal and does not require a database.
 
 You will need [Rust][].
 
