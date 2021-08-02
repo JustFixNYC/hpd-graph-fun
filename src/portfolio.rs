@@ -18,12 +18,11 @@ fn get_hpd_reg_contact_count(g: &HpdPetGraph, node: &NodeIndex<u32>) -> usize {
 
 pub struct Portfolio {
     nodes: HashSet<NodeIndex<u32>>,
-    pub name: String,
 }
 
 impl Portfolio {
-    fn new(nodes: HashSet<NodeIndex<u32>>, name: String) -> Self {
-        Portfolio { nodes, name }
+    fn new(nodes: HashSet<NodeIndex<u32>>) -> Self {
+        Portfolio { nodes }
     }
 
     pub fn rank_bizaddrs(&self, g: &HpdPetGraph) -> Vec<(Rc<String>, usize)> {
@@ -98,7 +97,7 @@ impl Portfolio {
 
         format!(
             "// {}'s portfolio\n\n{:?}",
-            self.get_best_name(g).unwrap_or(self.name.clone()),
+            self.get_best_name(g).unwrap_or("???".to_owned()),
             d
         )
     }
@@ -130,10 +129,7 @@ impl PortfolioMap {
                 node_portfolios.insert(node, portfolio_idx);
             }
 
-            portfolios.push(Portfolio::new(
-                nodes,
-                format!("Portfolio #{}", portfolio_idx),
-            ));
+            portfolios.push(Portfolio::new(nodes));
 
             portfolio_idx += 1;
         }
