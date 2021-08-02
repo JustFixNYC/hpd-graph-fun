@@ -59,7 +59,7 @@ impl LocalBridgeFinder {
         if let Some(to_nodes) = self.tree_edges.get(&n) {
             // println!("tree edges for {}: {:?}", n.index(), to_nodes);
             for to_node in to_nodes {
-                times.push(self.lowest_entry_time(*to_node, from)?);
+                times.push(self.lowest_entry_time(*to_node, n)?);
             }
         }
 
@@ -94,7 +94,7 @@ fn test_it_works() {
         (6, 4),
     ]);
 
-    let lbf = LocalBridgeFinder::new(&g, 2.into());
+    let lbf = LocalBridgeFinder::new(&g, 1.into());
 
     assert_eq!(lbf.is_local_bridge(1.into(), 101.into()), None);
     assert_eq!(lbf.is_local_bridge(100.into(), 1.into()), None);
