@@ -20,6 +20,8 @@ This algorithm was created by Sam Rabiyah, Samara Trilling, and Atul Varma durin
 
 You will need [Rust][].
 
+From the repository root, do the following:
+
 1. Download [NYC HPD Registration Contacts][hpd_reg_contacts] to `Registration_Contacts.csv`.
 
 2. Download [NYC HPD Registrations][hpd_regs] to `Multiple_Dwelling_Registrations.csv`.
