@@ -1,6 +1,7 @@
 mod bbl;
 mod hpd_graph;
 mod hpd_registrations;
+mod local_bridge;
 mod portfolio;
 mod ranking;
 mod synonyms;
