@@ -161,7 +161,7 @@ impl Program {
 
 fn main() {
     let matches = App::new("hpd-graph-fun")
-        .setting(AppSettings::ArgRequiredElseHelp)
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .version(VERSION)
         .author("Atul Varma <atul@justfix.nyc>")
         .about(
