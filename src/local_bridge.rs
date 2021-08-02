@@ -77,6 +77,20 @@ impl LocalBridgeFinder {
         // println!("  {} > {}", to_lowest_entry_time, from_entry_time);
         Some(to_lowest_entry_time > from_entry_time)
     }
+
+    pub fn find_local_bridges(&self) -> Vec<(NodeIndex<u32>, NodeIndex<u32>)> {
+        let mut result = vec![];
+
+        for (from, to_list) in self.tree_edges.iter() {
+            for to in to_list {
+                if let Some(true) = self.is_local_bridge(*from, *to) {
+                    result.push((*from, *to));
+                }
+            }
+        }
+
+        result
+    }
 }
 
 #[test]
@@ -101,4 +115,6 @@ fn test_it_works() {
     assert_eq!(lbf.is_local_bridge(100.into(), 101.into()), None);
     assert_eq!(lbf.is_local_bridge(1.into(), 2.into()), Some(false));
     assert_eq!(lbf.is_local_bridge(1.into(), 4.into()), Some(true));
+
+    assert_eq!(lbf.find_local_bridges(), vec![(1.into(), 4.into())]);
 }
