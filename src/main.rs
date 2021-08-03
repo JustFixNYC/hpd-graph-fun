@@ -76,10 +76,15 @@ impl Program {
                 );
             }
 
-            println!(
-                "\n{} local bridges are in the portfolio.\n",
-                portfolio.find_local_bridges(&self.hpd.graph).len()
-            );
+            let bridges = portfolio.find_local_bridges(&self.hpd.graph).len();
+
+            if bridges > 0 {
+                println!(
+                    "\nThe portfolio has {} local bridge{}.\n",
+                    bridges,
+                    if bridges > 1 { "s" } else { "" }
+                );
+            }
         }
     }
 

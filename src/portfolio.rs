@@ -133,7 +133,15 @@ impl Portfolio {
     pub fn find_local_bridges(&self, g: &HpdPetGraph) -> Vec<(NodeIndex<u32>, NodeIndex<u32>)> {
         if let Some(node) = self.nodes.iter().next() {
             let lbf = super::local_bridge::LocalBridgeFinder::new(&g, *node);
-            lbf.find_local_bridges()
+            let bridges = lbf
+                .find_local_bridges()
+                .into_iter()
+                .filter(|(n1, n2)| {
+                    // Ignore any bridges that, if removed, would orphan a single node.
+                    g.neighbors(*n1).count() > 1 && g.neighbors(*n2).count() > 1
+                })
+                .collect();
+            bridges
         } else {
             vec![]
         }
