@@ -1,3 +1,7 @@
 /target
 Registration_Contacts.csv
 Multiple_Dwelling_Registrations.csv
+/public/main.bundle.js
+/public/main.bundle.js.map
+/public/*.json
+/node_modules

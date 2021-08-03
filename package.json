@@ -1,0 +1,19 @@
+{
+  "name": "hpd-graph-fun",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/toolness/hpd-graph-fun",
+  "author": "Atul Varma <varmaa@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "esbuild": "esbuild typescript/main.ts --bundle --outfile=public/main.bundle.js --target=es2018 --sourcemap",
+    "build": "yarn esbuild --minify",
+    "watch": "yarn esbuild --servedir=public --serve=1234"
+  },
+  "dependencies": {
+    "@justfixnyc/util": "^0.3.0",
+    "@types/force-graph": "^1.26.1",
+    "esbuild": "^0.12.17",
+    "force-graph": "^1.42.1"
+  }
+}

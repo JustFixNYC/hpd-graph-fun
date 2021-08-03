@@ -32,6 +32,37 @@ From the repository root, do the following:
 
 Note that the required CSV files must be in the current directory when you run the program.
 
+## Visualizing portfolios
+
+### Using graphviz
+
+Portfolios can be visualized with `hpd dot`, which outputs to the format that can be visualized by [graphviz][], but it can be difficult to display large portfolios using this method.
+
+Here's an example of generating a portfolio as an SVG:
+
+```
+hpd dot "MOSES GUTMAN" | dot -Tsvg > portfolio.svg
+```
+
+### Using a web browser
+
+An alternative is to use `hpd json` to export a portfolio as JSON, and then visualize the graph using a web browser.
+
+To do this, you will also need [yarn][] and [nodejs][].
+
+From the repository root, do the following:
+
+1. Run `yarn`.
+
+2. Export a portfolio you want to visualize to `public/portfolio.json`.  For example, `hpd json "MOSES GUTMAN" > public/portfolio.json` will export the portfolio that contains Moses Gutman.
+
+3. Run `yarn watch`.
+
+4. Visit http://localhost:1234 to view the portfolio.
+
+[yarn]: https://yarnpkg.com/
+[nodejs]: https://nodejs.org/en/
+[graphviz]: https://graphviz.org/
 [Rust]: https://www.rust-lang.org/
 [hpd_regs]: https://data.cityofnewyork.us/Housing-Development/Multiple-Dwelling-Registrations/tesw-yqqr
 [hpd_reg_contacts]: https://data.cityofnewyork.us/Housing-Development/Registration-Contacts/feu5-w2e2
