@@ -1,11 +1,11 @@
 use petgraph::dot::{Config, Dot};
-use petgraph::graph::NodeIndex;
-use petgraph::visit::{Dfs, VisitMap};
+use petgraph::graph::{EdgeIndex, NodeIndex};
+use petgraph::visit::{Dfs, EdgeRef, VisitMap};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-use super::hpd_graph::{HpdPetGraph, Node};
+use super::hpd_graph::{HpdPetGraph, Node, RegInfo};
 use super::hpd_registrations::HpdRegistrationMap;
 use super::ranking::rank_tuples;
 
@@ -112,10 +112,21 @@ impl Portfolio {
 
     pub fn dot_graph(&self, g: &HpdPetGraph) -> String {
         let gf = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
+        let bridges: HashSet<EdgeIndex<u32>> = self
+            .find_local_bridges(&g)
+            .into_iter()
+            .map(|(n1, n2)| g.find_edge(n1, n2).unwrap())
+            .collect();
+        let get_edge_str = |_, edge: petgraph::graph::EdgeReference<Vec<RegInfo>>| {
+            let is_bridge = bridges.contains(&edge.id());
+            let color = if is_bridge { "red" } else { "black" };
+            format!("label=\" {}\" color={}", edge.weight().len(), color)
+        };
+
         let d = Dot::with_attr_getters(
             &gf,
             &[Config::EdgeNoLabel, Config::NodeNoLabel],
-            &|_, edge| format!("label=\" {}\"", edge.weight().len()),
+            &get_edge_str,
             &|_, (_, node)| match node {
                 Node::BizAddr(addr) => {
                     format!(
