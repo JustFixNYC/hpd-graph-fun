@@ -20,16 +20,13 @@ impl LocalBridgeFinder {
 
         depth_first_search(g, Some(start), |event| match event {
             DfsEvent::Discover(n, time) => {
-                // println!("EVENT Discover({}) = {}", n.index(), time.0);
                 entry_times.insert(n, time.0);
             }
             DfsEvent::TreeEdge(n1, n2) => {
-                // println!("EVENT TreeEdge({}, {})", n1.index(), n2.index());
                 let entry = tree_edges.entry(n1).or_insert_with(|| vec![]);
                 entry.push(n2);
             }
             DfsEvent::BackEdge(n1, n2) => {
-                // println!("EVENT BackEdge({}, {})", n1.index(), n2.index());
                 let entry = back_edges.entry(n1).or_insert_with(|| vec![]);
                 entry.push(n2);
             }
@@ -48,7 +45,6 @@ impl LocalBridgeFinder {
         let mut times = vec![entry_time];
 
         if let Some(prev_nodes) = self.back_edges.get(&n) {
-            // println!("back edges for {}: {:?}", n.index(), prev_nodes);
             for prev_node in prev_nodes {
                 if prev_node != &from {
                     times.push(*self.entry_times.get(prev_node)?);
@@ -57,24 +53,18 @@ impl LocalBridgeFinder {
         }
 
         if let Some(to_nodes) = self.tree_edges.get(&n) {
-            // println!("tree edges for {}: {:?}", n.index(), to_nodes);
             for to_node in to_nodes {
                 times.push(self.lowest_entry_time(*to_node, n)?);
             }
         }
 
-        let min = times.iter().min().map(|u| *u);
-
-        // println!("low({}) = {:?} // min({:?})", n.index(), min, times);
-
-        min
+        times.iter().min().map(|u| *u)
     }
 
     pub fn is_local_bridge(&self, from: NodeIndex<u32>, to: NodeIndex<u32>) -> Option<bool> {
         let from_entry_time = *self.entry_times.get(&from)?;
         let to_lowest_entry_time = self.lowest_entry_time(to, from)?;
 
-        // println!("  {} > {}", to_lowest_entry_time, from_entry_time);
         Some(to_lowest_entry_time > from_entry_time)
     }
 
@@ -83,7 +73,6 @@ impl LocalBridgeFinder {
 
         for (from, to_list) in self.tree_edges.iter() {
             for to in to_list {
-                // println!("Evaluating ({}, {}).", from.index(), to.index());
                 if let Some(true) = self.is_local_bridge(*from, *to) {
                     result.push((*from, *to));
                 }
