@@ -1,15 +1,26 @@
 import ForceGraph, { GraphData } from 'force-graph';
 
+function getEdgeColor(edge: PortfolioEdge): string {
+  if (edge.reg_contacts === 1) {
+    return 'lightgray'
+  } else if (edge.reg_contacts < 10) {
+    return 'gray';
+  }
+  return 'black';
+}
+
 function portfolioToGraphData(p: Portfolio): GraphData {
   return {
     nodes: p.nodes.map(node => ({
       id: node.id,
       name: 'Name' in node.value ? node.value.Name : node.value.BizAddr,
-      color: 'Name' in node.value ? 'pink' : 'gray',
+      color: 'Name' in node.value ? 'crimson' : 'gray',
       val: 10,
     })),
     links: p.edges.map(edge => ({
       source: edge.from,
+      name: `${edge.reg_contacts} HPD registration${edge.reg_contacts === 1 ? '' : 's'}`,
+      color: getEdgeColor(edge),
       target: edge.to,
     })),
   };
