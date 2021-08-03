@@ -1,6 +1,7 @@
 mod bbl;
 mod hpd_graph;
 mod hpd_registrations;
+mod local_bridge;
 mod portfolio;
 mod ranking;
 mod synonyms;
@@ -74,6 +75,11 @@ impl Program {
                     name, total_regs
                 );
             }
+
+            println!(
+                "\n{} local bridges are in the portfolio.\n",
+                portfolio.find_local_bridges(&self.hpd.graph).len()
+            );
         }
     }
 

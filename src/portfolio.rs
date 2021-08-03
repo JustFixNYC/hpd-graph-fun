@@ -129,6 +129,15 @@ impl Portfolio {
 
         format!("// {}\n\n{:?}", self.name(g), d)
     }
+
+    pub fn find_local_bridges(&self, g: &HpdPetGraph) -> Vec<(NodeIndex<u32>, NodeIndex<u32>)> {
+        if let Some(node) = self.nodes.iter().next() {
+            let lbf = super::local_bridge::LocalBridgeFinder::new(&g, *node);
+            lbf.find_local_bridges()
+        } else {
+            vec![]
+        }
+    }
 }
 
 pub struct PortfolioMap {
