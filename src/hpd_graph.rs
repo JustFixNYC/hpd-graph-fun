@@ -1,5 +1,5 @@
 use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
@@ -8,7 +8,7 @@ use super::hpd_registrations::HpdRegistrationMap;
 use super::portfolio::{Portfolio, PortfolioMap};
 use super::synonyms::Synonyms;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum Node {
     Name(Rc<String>),
     BizAddr(Rc<String>),

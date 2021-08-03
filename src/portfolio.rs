@@ -110,6 +110,57 @@ impl Portfolio {
         bins.len()
     }
 
+    pub fn json(&self, g: &HpdPetGraph) -> String {
+        // Note that petgraph supports Serde, but it only supports serializing
+        // entire graphs, not connected components, which is what we want, so
+        // I guess we'll have to roll our own here.
+
+        #[derive(serde::Serialize)]
+        struct JsonNode<'a> {
+            id: usize,
+            value: &'a Node,
+        }
+
+        #[derive(serde::Serialize)]
+        struct JsonEdge {
+            from: usize,
+            to: usize,
+            reg_contacts: usize,
+        }
+
+        #[derive(serde::Serialize)]
+        struct JsonGraph<'a> {
+            nodes: Vec<JsonNode<'a>>,
+            edges: Vec<JsonEdge>,
+        }
+
+        let mut edges_written = HashSet::new();
+        let mut graph = JsonGraph {
+            nodes: vec![],
+            edges: vec![],
+        };
+
+        for node in &self.nodes {
+            graph.nodes.push(JsonNode {
+                id: node.index(),
+                value: g.node_weight(*node).unwrap(),
+            });
+            for edge in g.edges(*node) {
+                let id = edge.id();
+                if !edges_written.contains(&id) {
+                    edges_written.insert(id);
+                    graph.edges.push(JsonEdge {
+                        from: edge.source().index(),
+                        to: edge.target().index(),
+                        reg_contacts: edge.weight().len(),
+                    });
+                }
+            }
+        }
+
+        serde_json::to_string(&graph).unwrap()
+    }
+
     pub fn dot_graph(&self, g: &HpdPetGraph) -> String {
         let gf = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
         let bridges: HashSet<EdgeIndex<u32>> = self

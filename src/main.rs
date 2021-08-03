@@ -41,6 +41,11 @@ impl Program {
         Ok(Program { regs, hpd })
     }
 
+    fn cmd_json(&self, name: &str) {
+        let portfolio = self.get_portfolio_with_name(&name.to_owned());
+        println!("{}", portfolio.json(&self.hpd.graph));
+    }
+
     fn cmd_info(&self, name: Option<&str>, top: usize) {
         let cc = connected_components(&self.hpd.graph);
         println!(
@@ -226,6 +231,11 @@ fn main() {
                 .arg(Arg::with_name("NAME").required(true)),
         )
         .subcommand(
+            SubCommand::with_name("json")
+                .about("Output JSON of a particular portfolio")
+                .arg(Arg::with_name("NAME").required(true)),
+        )
+        .subcommand(
             SubCommand::with_name("ranking")
                 .about("Show a ranking of the largest portfolios")
                 .arg(
@@ -254,6 +264,9 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("dot") {
         let name = matches.value_of("NAME").unwrap().to_owned();
         Program::new(args).unwrap().cmd_dot(&name);
+    } else if let Some(matches) = matches.subcommand_matches("json") {
+        let name = matches.value_of("NAME").unwrap().to_owned();
+        Program::new(args).unwrap().cmd_json(&name);
     } else if let Some(matches) = matches.subcommand_matches("ranking") {
         let min_buildings =
             value_t!(matches.value_of("min-buildings"), usize).unwrap_or_else(|e| e.exit());
