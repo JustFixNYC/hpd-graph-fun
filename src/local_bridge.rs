@@ -94,28 +94,57 @@ impl LocalBridgeFinder {
     }
 }
 
-#[test]
-fn test_it_works() {
-    let g = UnGraph::<u32, ()>::from_edges(&[
-        // Clique A
-        (1, 2),
-        (2, 3),
-        (3, 1),
-        // Bridge
-        (1, 4),
-        // Clique B
-        (4, 5),
-        (5, 6),
-        (6, 4),
-    ]);
+#[cfg(test)]
+mod tests {
+    use super::LocalBridgeFinder;
+    use petgraph::graph::UnGraph;
 
-    let lbf = LocalBridgeFinder::new(&g, 1.into());
+    fn make_graph() -> UnGraph<u32, ()> {
+        UnGraph::<u32, ()>::from_edges(&[
+            // Clique A
+            (1, 2),
+            (2, 3),
+            (3, 1),
+            // Bridge
+            (1, 4),
+            // Clique B
+            (4, 5),
+            (5, 6),
+            (6, 4),
+        ])
+    }
 
-    assert_eq!(lbf.is_local_bridge(1.into(), 101.into()), None);
-    assert_eq!(lbf.is_local_bridge(100.into(), 1.into()), None);
-    assert_eq!(lbf.is_local_bridge(100.into(), 101.into()), None);
-    assert_eq!(lbf.is_local_bridge(1.into(), 2.into()), Some(false));
-    assert_eq!(lbf.is_local_bridge(1.into(), 4.into()), Some(true));
+    #[test]
+    fn test_is_local_bridge_returns_none_on_invalid_nodes() {
+        let g = make_graph();
+        let lbf = LocalBridgeFinder::new(&g, 1.into());
 
-    assert_eq!(lbf.find_local_bridges(), vec![(1.into(), 4.into())]);
+        assert_eq!(lbf.is_local_bridge(1.into(), 101.into()), None);
+        assert_eq!(lbf.is_local_bridge(100.into(), 1.into()), None);
+        assert_eq!(lbf.is_local_bridge(100.into(), 101.into()), None);
+    }
+
+    #[test]
+    fn test_is_local_bridge_returns_false_on_non_bridges() {
+        let g = make_graph();
+        let lbf = LocalBridgeFinder::new(&g, 1.into());
+
+        assert_eq!(lbf.is_local_bridge(1.into(), 2.into()), Some(false));
+    }
+
+    #[test]
+    fn test_is_local_bridge_returns_true_on_bridges() {
+        let g = make_graph();
+        let lbf = LocalBridgeFinder::new(&g, 1.into());
+
+        assert_eq!(lbf.is_local_bridge(1.into(), 4.into()), Some(true));
+    }
+
+    #[test]
+    fn test_find_local_bridges_works() {
+        let g = make_graph();
+        let lbf = LocalBridgeFinder::new(&g, 1.into());
+
+        assert_eq!(lbf.find_local_bridges(), vec![(1.into(), 4.into())]);
+    }
 }
