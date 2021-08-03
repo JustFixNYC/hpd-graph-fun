@@ -105,9 +105,10 @@ impl HpdGraph {
                         .get(&name_string)
                         .unwrap_or_else(|| Rc::new(name_string));
                     let mut addr_string = format!(
-                        "{} {} {}, {} {}",
+                        "{} {}{}{}, {} {}",
                         record.house_no,
                         record.street_name,
+                        if record.apt_no.len() > 0 { " " } else { "" },
                         record.apt_no,
                         record.city,
                         record.state

@@ -115,15 +115,18 @@ impl Portfolio {
         let d = Dot::with_attr_getters(
             &gf,
             &[Config::EdgeNoLabel, Config::NodeNoLabel],
-            &|_, edge| format!("label=\"{}\"", edge.weight().len()),
+            &|_, edge| format!("label=\" {}\"", edge.weight().len()),
             &|_, (_, node)| match node {
                 Node::BizAddr(addr) => {
                     format!(
                         "label=\"{}\", color=lightblue2, style=filled, shape=box",
-                        addr
+                        addr.to_lowercase()
                     )
                 }
-                Node::Name(name) => format!("label=\"{}\", color=whitesmoke, style=filled", name),
+                Node::Name(name) => format!(
+                    "label=\"{}\", color=whitesmoke, style=filled",
+                    name.to_lowercase()
+                ),
             },
         );
 
