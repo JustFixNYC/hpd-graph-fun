@@ -12,6 +12,7 @@ use petgraph::algo::{connected_components, dijkstra};
 use petgraph::visit::VisitMap;
 use std::collections::HashSet;
 use std::error::Error;
+use std::ops::Deref;
 
 use hpd_graph::{HpdGraph, Node};
 use hpd_registrations::HpdRegistrationMap;
@@ -47,7 +48,7 @@ impl Program {
     }
 
     fn cmd_info(&self, name: Option<&str>, top: usize) {
-        let cc = connected_components(&self.hpd.graph);
+        let cc = connected_components(&self.hpd.graph.deref());
         println!(
             "Read {} unique names, {} unique addresses, and {} connected components.",
             self.hpd.name_nodes.len(),
@@ -57,13 +58,13 @@ impl Program {
 
         if let Some(name) = name {
             let portfolio = self.get_portfolio_with_name(&name.to_owned());
-            println!("This is {}.", portfolio.name(&self.hpd.graph));
+            println!("This is {}.", portfolio.name());
             println!(
                 "It has {} buildings.",
-                portfolio.building_count(&self.hpd.graph, &self.regs)
+                portfolio.building_count(&self.regs)
             );
 
-            let bizaddrs = portfolio.rank_bizaddrs(&self.hpd.graph);
+            let bizaddrs = portfolio.rank_bizaddrs();
             println!("\nThe most frequent business addresses mentioned in the portfolio are:\n");
             for (bizaddr, total_regs) in bizaddrs.iter().take(top) {
                 println!(
@@ -72,7 +73,7 @@ impl Program {
                 );
             }
 
-            let names = portfolio.rank_names(&self.hpd.graph);
+            let names = portfolio.rank_names();
             println!("\nThe most frequent names mentioned in the portfolio are:\n");
             for (name, total_regs) in names.iter().take(top) {
                 println!(
@@ -115,7 +116,7 @@ impl Program {
         let mut ranking: Vec<(&Portfolio, usize)> = vec![];
 
         for portfolio in self.hpd.portfolios.all() {
-            let size = portfolio.building_count(&self.hpd.graph, &self.regs);
+            let size = portfolio.building_count(&self.regs);
             if size >= min_buildings {
                 ranking.push((portfolio, size));
             }
@@ -125,7 +126,7 @@ impl Program {
 
         let mut rank = 1;
         for (portfolio, size) in ranking {
-            let name = portfolio.name(&self.hpd.graph);
+            let name = portfolio.name();
             println!("{}. {} - {} buildings", rank, name, size);
             rank += 1;
         }
@@ -144,7 +145,7 @@ impl Program {
             if let Some(Node::Name(_)) = self.hpd.graph.node_weight(node) {
                 let mut max_cost = 0;
                 let mut max_cost_node = None;
-                let dijkstra_map = dijkstra(&self.hpd.graph, node, None, |_| 1);
+                let dijkstra_map = dijkstra(&self.hpd.graph.deref(), node, None, |_| 1);
                 for (other_node, cost) in dijkstra_map {
                     visits.visit(other_node);
                     if let Some(Node::Name(_)) = self.hpd.graph.node_weight(other_node) {
@@ -157,7 +158,7 @@ impl Program {
                 if max_cost >= min_length {
                     if let Some(other_node) = max_cost_node {
                         let (_, path) = petgraph::algo::astar(
-                            &self.hpd.graph,
+                            &self.hpd.graph.deref(),
                             node,
                             |n| n == other_node,
                             |_| 1,

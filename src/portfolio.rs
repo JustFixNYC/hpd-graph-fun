@@ -4,39 +4,42 @@ use petgraph::visit::{Dfs, EdgeRef, VisitMap};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
+use std::ops::Deref;
 
 use super::hpd_graph::{HpdPetGraph, Node, RegInfo};
 use super::hpd_registrations::HpdRegistrationMap;
 use super::ranking::rank_tuples;
 
-fn get_hpd_reg_contact_count(g: &HpdPetGraph, node: &NodeIndex<u32>) -> usize {
-    let mut total = 0;
-    for edge in g.edges(*node) {
-        let reg_info = edge.weight();
-        total += reg_info.len();
-    }
-    total
-}
-
 pub struct Portfolio {
+    graph: Rc<HpdPetGraph>,
     nodes: HashSet<NodeIndex<u32>>,
     cached_name: RefCell<Option<Rc<String>>>,
 }
 
 impl Portfolio {
-    fn new(nodes: HashSet<NodeIndex<u32>>) -> Self {
+    fn new(nodes: HashSet<NodeIndex<u32>>, graph: Rc<HpdPetGraph>) -> Self {
         Portfolio {
+            graph,
             nodes,
             cached_name: RefCell::new(None),
         }
     }
 
-    pub fn rank_bizaddrs(&self, g: &HpdPetGraph) -> Vec<(Rc<String>, usize)> {
+    fn get_hpd_reg_contact_count(&self, node: &NodeIndex<u32>) -> usize {
+        let mut total = 0;
+        for edge in self.graph.edges(*node) {
+            let reg_info = edge.weight();
+            total += reg_info.len();
+        }
+        total
+    }
+
+    pub fn rank_bizaddrs(&self) -> Vec<(Rc<String>, usize)> {
         let mut result = vec![];
 
         for node in self.nodes.iter() {
-            if let Node::BizAddr(name) = g.node_weight(*node).unwrap() {
-                result.push((Rc::clone(name), get_hpd_reg_contact_count(g, node)));
+            if let Node::BizAddr(name) = self.graph.node_weight(*node).unwrap() {
+                result.push((Rc::clone(name), self.get_hpd_reg_contact_count(node)));
             }
         }
 
@@ -44,12 +47,12 @@ impl Portfolio {
         result
     }
 
-    pub fn rank_names(&self, g: &HpdPetGraph) -> Vec<(Rc<String>, usize)> {
+    pub fn rank_names(&self) -> Vec<(Rc<String>, usize)> {
         let mut result = vec![];
 
         for node in self.nodes.iter() {
-            if let Node::Name(name) = g.node_weight(*node).unwrap() {
-                result.push((Rc::clone(name), get_hpd_reg_contact_count(g, node)));
+            if let Node::Name(name) = self.graph.node_weight(*node).unwrap() {
+                result.push((Rc::clone(name), self.get_hpd_reg_contact_count(node)));
             }
         }
 
@@ -57,12 +60,12 @@ impl Portfolio {
         result
     }
 
-    pub fn name(&self, g: &HpdPetGraph) -> Rc<String> {
+    pub fn name(&self) -> Rc<String> {
         if self.cached_name.borrow().is_none() {
             let mut option = self.cached_name.borrow_mut();
             let name = format!(
                 "{}'s portfolio",
-                self.get_best_name(g).unwrap_or("???".to_owned())
+                self.get_best_name().unwrap_or("???".to_owned())
             );
             option.replace(Rc::new(name));
         }
@@ -71,11 +74,11 @@ impl Portfolio {
         Rc::clone(option.as_ref().unwrap())
     }
 
-    fn get_best_name(&self, g: &HpdPetGraph) -> Option<String> {
+    fn get_best_name(&self) -> Option<String> {
         let mut best: Option<(NodeIndex<u32>, usize)> = None;
         for node in self.nodes.iter() {
-            if let Node::Name(_) = g.node_weight(*node).unwrap() {
-                let count = get_hpd_reg_contact_count(g, node);
+            if let Node::Name(_) = self.graph.node_weight(*node).unwrap() {
+                let count = self.get_hpd_reg_contact_count(node);
                 let is_new_best = if let Some((_, current_count)) = best {
                     current_count < count
                 } else {
@@ -87,18 +90,18 @@ impl Portfolio {
             }
         }
         if let Some((node_idx, _)) = best {
-            let node = g.node_weight(node_idx).unwrap();
+            let node = self.graph.node_weight(node_idx).unwrap();
             Some(node.to_str().to_owned())
         } else {
             None
         }
     }
 
-    pub fn building_count(&self, g: &HpdPetGraph, regs: &HpdRegistrationMap) -> usize {
+    pub fn building_count(&self, regs: &HpdRegistrationMap) -> usize {
         let mut bins = HashSet::<u32>::new();
         for node in self.nodes.iter() {
-            if let Node::Name(_) = g.node_weight(*node).unwrap() {
-                for edge in g.edges(*node) {
+            if let Node::Name(_) = self.graph.node_weight(*node).unwrap() {
+                for edge in self.graph.edges(*node) {
                     for reg_info in edge.weight() {
                         for reg in regs.get_by_id(reg_info.id).unwrap() {
                             bins.insert(reg.reg_id);
@@ -137,7 +140,7 @@ impl Portfolio {
 
         let mut edges_written = HashSet::new();
         let mut graph = JsonGraph {
-            title: self.name(&g).to_string(),
+            title: self.name().to_string(),
             nodes: vec![],
             edges: vec![],
         };
@@ -194,7 +197,7 @@ impl Portfolio {
             },
         );
 
-        format!("// {}\n\n{:?}", self.name(g), d)
+        format!("// {}\n\n{:?}", self.name(), d)
     }
 
     pub fn find_local_bridges(&self, g: &HpdPetGraph) -> Vec<(NodeIndex<u32>, NodeIndex<u32>)> {
@@ -221,7 +224,7 @@ pub struct PortfolioMap {
 }
 
 impl PortfolioMap {
-    pub fn from_graph(graph: &HpdPetGraph) -> Self {
+    pub fn from_graph(graph: Rc<HpdPetGraph>) -> Self {
         let mut visited = HashSet::with_capacity(graph.node_count());
         let mut portfolios = vec![];
         let mut node_portfolios = HashMap::new();
@@ -233,15 +236,15 @@ impl PortfolioMap {
             }
             visited.visit(start);
             let mut nodes = HashSet::new();
-            let mut dfs = Dfs::new(&graph, start);
+            let mut dfs = Dfs::new(&graph.deref(), start);
 
-            while let Some(node) = dfs.next(&graph) {
+            while let Some(node) = dfs.next(&graph.deref()) {
                 visited.visit(node);
                 nodes.insert(node);
                 node_portfolios.insert(node, portfolio_idx);
             }
 
-            portfolios.push(Portfolio::new(nodes));
+            portfolios.push(Portfolio::new(nodes, Rc::clone(&graph)));
 
             portfolio_idx += 1;
         }

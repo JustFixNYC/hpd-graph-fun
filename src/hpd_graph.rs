@@ -62,7 +62,7 @@ struct HpdRegistrationContact<'a> {
 }
 
 pub struct HpdGraph {
-    pub graph: HpdPetGraph,
+    pub graph: Rc<HpdPetGraph>,
     pub name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     pub addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     pub portfolios: PortfolioMap,
@@ -75,7 +75,7 @@ impl HpdGraph {
         include_corps: bool,
     ) -> Result<Self, Box<dyn Error>> {
         let synonyms = Synonyms::new();
-        let mut graph: HpdPetGraph = Graph::new_undirected();
+        let mut src_graph: HpdPetGraph = Graph::new_undirected();
         let mut name_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut addr_nodes = HashMap::<Rc<String>, NodeIndex<u32>>::new();
         let mut edges = HashMap::<(NodeIndex<u32>, NodeIndex<u32>), EdgeIndex<u32>>::new();
@@ -117,14 +117,14 @@ impl HpdGraph {
                     let addr = Rc::new(addr_string);
                     let addr_node = *addr_nodes
                         .entry(Rc::clone(&addr))
-                        .or_insert_with(|| graph.add_node(Node::BizAddr(Rc::clone(&addr))));
+                        .or_insert_with(|| src_graph.add_node(Node::BizAddr(Rc::clone(&addr))));
                     let name_node = *name_nodes
                         .entry(Rc::clone(&name))
-                        .or_insert_with(|| graph.add_node(Node::Name(Rc::clone(&name))));
+                        .or_insert_with(|| src_graph.add_node(Node::Name(Rc::clone(&name))));
                     let edge_idx = edges
                         .entry((name_node, addr_node))
-                        .or_insert_with(|| graph.add_edge(name_node, addr_node, vec![]));
-                    let edge = graph.edge_weight_mut(*edge_idx).unwrap();
+                        .or_insert_with(|| src_graph.add_edge(name_node, addr_node, vec![]));
+                    let edge = src_graph.edge_weight_mut(*edge_idx).unwrap();
                     edge.push(RegInfo {
                         id: record.reg_id,
                         contact_id: record.reg_contact_id,
@@ -134,7 +134,8 @@ impl HpdGraph {
             }
         }
 
-        let portfolios = PortfolioMap::from_graph(&graph);
+        let graph = Rc::new(src_graph);
+        let portfolios = PortfolioMap::from_graph(Rc::clone(&graph));
 
         Ok(HpdGraph {
             graph,
