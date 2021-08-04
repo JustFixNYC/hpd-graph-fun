@@ -60,10 +60,7 @@ impl Program {
         if let Some(name) = name {
             let portfolio = self.get_portfolio_with_name(&name.to_owned());
             println!("This is {}.", portfolio.name());
-            println!(
-                "It has {} buildings.",
-                portfolio.building_count(&self.regs)
-            );
+            println!("It has {} buildings.", portfolio.building_count(&self.regs));
 
             let bizaddrs = portfolio.rank_bizaddrs();
             println!("\nThe most frequent business addresses mentioned in the portfolio are:\n");

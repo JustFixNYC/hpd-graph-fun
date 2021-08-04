@@ -3,8 +3,8 @@ use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{Dfs, EdgeRef, VisitMap};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
 use std::ops::Deref;
+use std::rc::Rc;
 
 use super::hpd_graph::{HpdPetGraph, Node, RegInfo};
 use super::hpd_registrations::HpdRegistrationMap;

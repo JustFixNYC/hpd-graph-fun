@@ -1,9 +1,9 @@
 use petgraph::graph::{EdgeIndex, Graph, NodeIndex};
 use serde::{Deserialize, Serialize};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 use super::hpd_registrations::HpdRegistrationMap;
 use super::portfolio::PortfolioMap;
