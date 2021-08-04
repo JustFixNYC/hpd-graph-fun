@@ -65,6 +65,7 @@ async function main() {
 
     if (!query) {
       messageEl.textContent = "";
+      graph.zoomToFit(500, 20, node => true);
       return;
     }
 
