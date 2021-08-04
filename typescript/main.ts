@@ -49,6 +49,8 @@ async function main() {
   document.title = portfolio.title;
   getHTMLElement('h1', '').textContent = document.title;
 
+  messageEl.textContent = `Loaded portfolio with ${portfolio.nodes.length} nodes and ${portfolio.edges.length} edges.`;
+
   const graphData = portfolioToGraphData(portfolio);
 
   const graph = ForceGraph()(graphEl).graphData(graphData).nodeColor(node => {
