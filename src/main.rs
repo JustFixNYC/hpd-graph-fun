@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use hpd_graph::{HpdGraph, Node};
 use hpd_registrations::HpdRegistrationMap;
-use portfolio::Portfolio;
+use portfolio::{Portfolio, PortfolioMap};
 use ranking::rank_tuples;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -92,13 +92,17 @@ impl Program {
         }
     }
 
+    fn make_portfolios(&self) -> PortfolioMap {
+        PortfolioMap::from_graph(Rc::clone(&self.hpd.graph))
+    }
+
     fn get_portfolio_with_name(&self, name: &String) -> Rc<Portfolio> {
         if let Some(node) = self.hpd.find_name(&name) {
             eprintln!(
                 "Found a matching name '{}'.",
                 self.hpd.graph.node_weight(node).unwrap().to_str()
             );
-            self.hpd.portfolios().for_node(node).unwrap()
+            self.make_portfolios().for_node(node).unwrap()
         } else {
             eprintln!("Unable to find a match for the name '{}'.", &name);
             std::process::exit(1);
@@ -112,7 +116,7 @@ impl Program {
 
     fn cmd_ranking(&self, min_buildings: usize) {
         let mut ranking: Vec<(&Portfolio, usize)> = vec![];
-        let portfolios = self.hpd.portfolios();
+        let portfolios = self.make_portfolios();
 
         for portfolio in portfolios.all() {
             let size = portfolio.building_count(&self.regs);
