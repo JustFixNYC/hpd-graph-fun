@@ -51,7 +51,7 @@ async function main() {
 
   const graphData = portfolioToGraphData(portfolio);
 
-  const graph = ForceGraph()(graphEl).linkDirectionalParticles(2).graphData(graphData).nodeColor(node => {
+  const graph = ForceGraph()(graphEl).graphData(graphData).nodeColor(node => {
     return selectedNodes.has(node) ? "blue" : node.color;
   });
 
