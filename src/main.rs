@@ -45,7 +45,7 @@ impl Program {
 
     fn cmd_json(&self, name: &str) {
         let portfolio = self.get_portfolio_with_name(&name.to_owned());
-        println!("{}", portfolio.json(&self.hpd.graph));
+        println!("{}", portfolio.json());
     }
 
     fn cmd_info(&self, name: Option<&str>, top: usize) {
@@ -80,7 +80,7 @@ impl Program {
                 );
             }
 
-            let bridges = portfolio.find_local_bridges(&self.hpd.graph).len();
+            let bridges = portfolio.find_local_bridges().len();
 
             if bridges > 0 {
                 println!(
@@ -107,7 +107,7 @@ impl Program {
 
     fn cmd_dot(&self, name: &String) {
         let portfolio = self.get_portfolio_with_name(name);
-        println!("{}", portfolio.dot_graph(&self.hpd.graph));
+        println!("{}", portfolio.dot_graph());
     }
 
     fn cmd_ranking(&self, min_buildings: usize) {

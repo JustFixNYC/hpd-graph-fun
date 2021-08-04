@@ -113,7 +113,7 @@ impl Portfolio {
         bins.len()
     }
 
-    pub fn json(&self, g: &HpdPetGraph) -> String {
+    pub fn json(&self) -> String {
         // Note that petgraph supports Serde, but it only supports serializing
         // entire graphs, not connected components, which is what we want, so
         // I guess we'll have to roll our own here.
@@ -148,9 +148,9 @@ impl Portfolio {
         for node in &self.nodes {
             graph.nodes.push(JsonNode {
                 id: node.index(),
-                value: g.node_weight(*node).unwrap(),
+                value: self.graph.node_weight(*node).unwrap(),
             });
-            for edge in g.edges(*node) {
+            for edge in self.graph.edges(*node) {
                 let id = edge.id();
                 if !edges_written.contains(&id) {
                     edges_written.insert(id);
@@ -166,12 +166,13 @@ impl Portfolio {
         serde_json::to_string(&graph).unwrap()
     }
 
-    pub fn dot_graph(&self, g: &HpdPetGraph) -> String {
+    pub fn dot_graph(&self) -> String {
+        let g = self.graph.deref();
         let gf = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
         let bridges: HashSet<EdgeIndex<u32>> = self
-            .find_local_bridges(&g)
+            .find_local_bridges()
             .into_iter()
-            .map(|(n1, n2)| g.find_edge(n1, n2).unwrap())
+            .map(|(n1, n2)| self.graph.find_edge(n1, n2).unwrap())
             .collect();
         let get_edge_str = |_, edge: petgraph::graph::EdgeReference<Vec<RegInfo>>| {
             let is_bridge = bridges.contains(&edge.id());
@@ -200,15 +201,15 @@ impl Portfolio {
         format!("// {}\n\n{:?}", self.name(), d)
     }
 
-    pub fn find_local_bridges(&self, g: &HpdPetGraph) -> Vec<(NodeIndex<u32>, NodeIndex<u32>)> {
+    pub fn find_local_bridges(&self) -> Vec<(NodeIndex<u32>, NodeIndex<u32>)> {
         if let Some(node) = self.nodes.iter().next() {
-            let lbf = super::local_bridge::LocalBridgeFinder::new(&g, *node);
+            let lbf = super::local_bridge::LocalBridgeFinder::new(&self.graph, *node);
             let bridges = lbf
                 .find_local_bridges()
                 .into_iter()
                 .filter(|(n1, n2)| {
                     // Ignore any bridges that, if removed, would orphan a single node.
-                    g.neighbors(*n1).count() > 1 && g.neighbors(*n2).count() > 1
+                    self.graph.neighbors(*n1).count() > 1 && self.graph.neighbors(*n2).count() > 1
                 })
                 .collect();
             bridges
