@@ -130,12 +130,14 @@ impl Portfolio {
 
         #[derive(serde::Serialize)]
         struct JsonGraph<'a> {
+            title: String,
             nodes: Vec<JsonNode<'a>>,
             edges: Vec<JsonEdge>,
         }
 
         let mut edges_written = HashSet::new();
         let mut graph = JsonGraph {
+            title: self.name(&g).to_string(),
             nodes: vec![],
             edges: vec![],
         };

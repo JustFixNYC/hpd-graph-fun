@@ -10,6 +10,7 @@ type PortfolioEdge = {
 };
 
 type Portfolio = {
+  title: string,
   nodes: PortfolioNode[],
   edges: PortfolioEdge[],
 };

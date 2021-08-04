@@ -1,3 +1,4 @@
+import { getHTMLElement } from '@justfixnyc/util';
 import ForceGraph, { GraphData } from 'force-graph';
 
 function getEdgeColor(edge: PortfolioEdge): string {
@@ -27,8 +28,7 @@ function portfolioToGraphData(p: Portfolio): GraphData {
 }
 
 async function main() {
-  const graphEl = document.createElement("div");
-  document.body.appendChild(graphEl);
+  const graphEl = getHTMLElement('div', '#graph');
 
   const filename = 'portfolio.json';
   const portfolioReq = await fetch(filename);
@@ -39,7 +39,12 @@ async function main() {
   }
 
   const portfolio: Portfolio = await portfolioReq.json();
+
+  document.title = portfolio.title;
+  getHTMLElement('h1', '').textContent = document.title;
+
   const graphData = portfolioToGraphData(portfolio);
+
   const graph = ForceGraph()(graphEl).linkDirectionalParticles(2).graphData(graphData);
 }
 
