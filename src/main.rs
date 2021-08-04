@@ -13,6 +13,7 @@ use petgraph::visit::VisitMap;
 use std::collections::HashSet;
 use std::error::Error;
 use std::ops::Deref;
+use std::rc::Rc;
 
 use hpd_graph::{HpdGraph, Node};
 use hpd_registrations::HpdRegistrationMap;
@@ -94,13 +95,13 @@ impl Program {
         }
     }
 
-    fn get_portfolio_with_name(&self, name: &String) -> &Portfolio {
+    fn get_portfolio_with_name(&self, name: &String) -> Rc<Portfolio> {
         if let Some(node) = self.hpd.find_name(&name) {
             eprintln!(
                 "Found a matching name '{}'.",
                 self.hpd.graph.node_weight(node).unwrap().to_str()
             );
-            self.hpd.portfolio_for_node(node).unwrap()
+            self.hpd.portfolios().for_node(node).unwrap()
         } else {
             eprintln!("Unable to find a match for the name '{}'.", &name);
             std::process::exit(1);
@@ -114,8 +115,9 @@ impl Program {
 
     fn cmd_ranking(&self, min_buildings: usize) {
         let mut ranking: Vec<(&Portfolio, usize)> = vec![];
+        let portfolios = self.hpd.portfolios();
 
-        for portfolio in self.hpd.portfolios.all() {
+        for portfolio in portfolios.all() {
             let size = portfolio.building_count(&self.regs);
             if size >= min_buildings {
                 ranking.push((portfolio, size));

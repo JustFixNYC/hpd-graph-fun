@@ -3,9 +3,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use super::hpd_registrations::HpdRegistrationMap;
-use super::portfolio::{Portfolio, PortfolioMap};
+use super::portfolio::PortfolioMap;
 use super::synonyms::Synonyms;
 
 #[derive(Debug, Serialize)]
@@ -65,7 +66,7 @@ pub struct HpdGraph {
     pub graph: Rc<HpdPetGraph>,
     pub name_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
     pub addr_nodes: HashMap<Rc<String>, NodeIndex<u32>>,
-    pub portfolios: PortfolioMap,
+    cached_portfolios: RefCell<Option<Rc<PortfolioMap>>>,
 }
 
 impl HpdGraph {
@@ -135,18 +136,26 @@ impl HpdGraph {
         }
 
         let graph = Rc::new(src_graph);
-        let portfolios = PortfolioMap::from_graph(Rc::clone(&graph));
 
         Ok(HpdGraph {
             graph,
             name_nodes,
             addr_nodes,
-            portfolios,
+            cached_portfolios: RefCell::new(None),
         })
     }
 
-    pub fn portfolio_for_node(&self, node: NodeIndex<u32>) -> Option<&Portfolio> {
-        self.portfolios.for_node(node)
+    pub fn portfolios(&self) -> Rc<PortfolioMap> {
+        if self.cached_portfolios.borrow().is_none() {
+            let portfolios = Rc::new(PortfolioMap::from_graph(Rc::clone(&self.graph)));
+            let mut option = self.cached_portfolios.borrow_mut();
+
+            option.replace(portfolios);
+        }
+
+        let opt = self.cached_portfolios.borrow();
+        let portfolios = opt.as_ref().unwrap();
+        Rc::clone(portfolios)
     }
 
     pub fn path_to_string(&self, path: Vec<NodeIndex<u32>>) -> String {

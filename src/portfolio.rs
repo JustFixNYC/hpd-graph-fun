@@ -219,7 +219,7 @@ impl Portfolio {
 }
 
 pub struct PortfolioMap {
-    portfolios: Vec<Portfolio>,
+    portfolios: Vec<Rc<Portfolio>>,
     node_portfolios: HashMap<NodeIndex<u32>, usize>,
 }
 
@@ -244,7 +244,7 @@ impl PortfolioMap {
                 node_portfolios.insert(node, portfolio_idx);
             }
 
-            portfolios.push(Portfolio::new(nodes, Rc::clone(&graph)));
+            portfolios.push(Rc::new(Portfolio::new(nodes, Rc::clone(&graph))));
 
             portfolio_idx += 1;
         }
@@ -255,13 +255,13 @@ impl PortfolioMap {
         }
     }
 
-    pub fn all(&self) -> &Vec<Portfolio> {
+    pub fn all(&self) -> &Vec<Rc<Portfolio>> {
         &self.portfolios
     }
 
-    pub fn for_node(&self, node: NodeIndex<u32>) -> Option<&Portfolio> {
+    pub fn for_node(&self, node: NodeIndex<u32>) -> Option<Rc<Portfolio>> {
         if let Some(idx) = self.node_portfolios.get(&node) {
-            Some(&self.portfolios[*idx])
+            Some(Rc::clone(&self.portfolios[*idx]))
         } else {
             None
         }
