@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<style>
+#graph {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+</style>
 <title>hpd-graph-fun</title>
+<div id="graph"></div>
 <h1>hpd-graph-fun</h1>
 <form id="search-form">
   <input type="search" value="" placeholder="🔎" id="search-input">
   <button type="submit">Search</button>
 </form>
 <p id="message"></p>
-<div id="graph"></div>
 <script src="main.bundle.js"></script>
