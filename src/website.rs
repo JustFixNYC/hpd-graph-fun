@@ -1,4 +1,4 @@
-use maud::{html, PreEscaped, DOCTYPE};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 use std::error::Error;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -31,12 +31,18 @@ fn write_website_file<T: AsRef<str>>(filename: T, content: &String) -> Result<()
     }
 }
 
-fn portfolio_html(portfolio: &Rc<Portfolio>) -> String {
-    let page = html! {
+fn header<T: AsRef<str>>(title: T) -> Markup {
+    html! {
         (DOCTYPE)
         meta charset="utf-8";
         link rel="stylesheet" href="styles.css";
-        title { (portfolio.name()) }
+        title { (title) }
+    }
+}
+
+fn portfolio_html(portfolio: &Rc<Portfolio>) -> String {
+    let page = html! {
+        (header(portfolio.name().as_ref()))
         div id="graph" {}
         h1 { (portfolio.name()) }
         form id="search-form" {
