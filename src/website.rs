@@ -88,6 +88,9 @@ pub fn make_website(
             a href="https://github.com/JustFixNYC/hpd-graph-fun#readme" { "README" }
             "."
         }
+        p {
+            "This website was generated on " (chrono::Utc::now()) "."
+        }
     };
 
     write_website_file(&INDEX_FILENAME, &index_html.into_string())?;
