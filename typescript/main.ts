@@ -1,4 +1,4 @@
-import { getHTMLElement } from '@justfixnyc/util';
+import { assertNotNull, getHTMLElement } from '@justfixnyc/util';
 import ForceGraph, { GraphData, LinkObject, NodeObject } from 'force-graph';
 
 function getEdgeColor(edge: PortfolioEdge): string {
@@ -27,23 +27,15 @@ function portfolioToGraphData(p: Portfolio): GraphData {
   };
 }
 
-async function main() {
+function main() {
   const graphEl = getHTMLElement('div', '#graph');
   const messageEl = getHTMLElement('p', '#message');
   const searchForm = getHTMLElement("form", "#search-form");
   const searchInput = getHTMLElement("input", "#search-input");
-
-  const filename = 'portfolio.json';
-  const portfolioReq = await fetch(filename);
+  const portfolio: Portfolio = JSON.parse(assertNotNull(getHTMLElement("script", "#portfolio").textContent));
 
   searchInput.value = "";
 
-  if (!portfolioReq.ok) {
-    messageEl.textContent = `Got HTTP ${portfolioReq.status} when trying to retrive ${filename}!`;
-    return;
-  }
-
-  const portfolio: Portfolio = await portfolioReq.json();
   const selectedNodes = new Set<NodeObject>();
 
   document.title = portfolio.title;

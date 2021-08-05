@@ -1,6 +1,6 @@
 [package]
 name = "hpd"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Atul Varma <varmaa@gmail.com>"]
 edition = "2018"
 
@@ -13,3 +13,4 @@ petgraph = "0.6"
 clap = "2.33.3"
 chrono = "0.4"
 serde_json = "1.0.59"
+maud = "*"

@@ -5,6 +5,7 @@ mod local_bridge;
 mod portfolio;
 mod ranking;
 mod synonyms;
+mod website;
 
 use chrono::Duration;
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
@@ -126,6 +127,10 @@ impl Program {
         }
     }
 
+    fn cmd_website(&self, min_buildings: usize) -> Result<(), Box<dyn Error>> {
+        website::make_website(self.make_portfolios(), &self.regs, min_buildings)
+    }
+
     fn cmd_longpaths(&self, min_length: u32) {
         let mut visits = HashSet::new();
 
@@ -242,6 +247,18 @@ fn main() {
                         .takes_value(true),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("website")
+                .about("Export a website with the largest portfolios")
+                .arg(
+                    Arg::with_name("min-buildings")
+                        .short("b")
+                        .long("min-buildings")
+                        .default_value("100")
+                        .help("Only show portfolios of a minimum size")
+                        .takes_value(true),
+                ),
+        )
         .get_matches();
 
     let args = ProgramArgs {
@@ -266,5 +283,12 @@ fn main() {
         let min_buildings =
             value_t!(matches.value_of("min-buildings"), usize).unwrap_or_else(|e| e.exit());
         Program::new(args).unwrap().cmd_ranking(min_buildings);
+    } else if let Some(matches) = matches.subcommand_matches("website") {
+        let min_buildings =
+            value_t!(matches.value_of("min-buildings"), usize).unwrap_or_else(|e| e.exit());
+        Program::new(args)
+            .unwrap()
+            .cmd_website(min_buildings)
+            .unwrap();
     }
 }
