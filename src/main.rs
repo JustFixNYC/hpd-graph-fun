@@ -5,6 +5,7 @@ mod local_bridge;
 mod portfolio;
 mod ranking;
 mod synonyms;
+mod website;
 
 use chrono::Duration;
 use clap::{value_t, App, AppSettings, Arg, SubCommand};
@@ -127,11 +128,7 @@ impl Program {
     }
 
     fn cmd_website(&self, min_buildings: usize) {
-        let portfolios = self
-            .make_portfolios()
-            .rank_by_building_count(&self.regs, min_buildings);
-
-        println!("TODO: Export {} portfolios.", portfolios.len());
+        website::make_website(self.make_portfolios(), &self.regs, min_buildings);
     }
 
     fn cmd_longpaths(&self, min_length: u32) {
