@@ -6,6 +6,7 @@
   "author": "Atul Varma <varmaa@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "typecheck": "tsc",
     "esbuild": "esbuild typescript/main.ts --bundle --outfile=public/main.bundle.js --target=es2018 --sourcemap",
     "build": "yarn esbuild --minify",
     "watch": "yarn esbuild --servedir=public --serve=1234"
@@ -13,6 +14,7 @@
   "dependencies": {
     "@justfixnyc/util": "^0.3.0",
     "esbuild": "^0.12.17",
-    "force-graph": "^1.42.1"
+    "force-graph": "^1.42.1",
+    "typescript": "^4.3.5"
   }
 }
