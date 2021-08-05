@@ -1,4 +1,4 @@
-use maud::{html, DOCTYPE};
+use maud::{html, PreEscaped, DOCTYPE};
 use std::rc::Rc;
 
 use super::hpd_registrations::HpdRegistrationMap;
@@ -6,12 +6,16 @@ use super::portfolio::{Portfolio, PortfolioMap};
 
 fn slugify<T: AsRef<str>>(value: T) -> String {
     let value_ref = value.as_ref();
-    value_ref.chars().map(|c| match c {
-        'A'..='Z' => Some(c.to_ascii_lowercase()),
-        'a'..='z' => Some(c),
-        ' ' => Some('_'),
-        _ => None,
-    }).flatten().collect::<String>()
+    value_ref
+        .chars()
+        .map(|c| match c {
+            'A'..='Z' => Some(c.to_ascii_lowercase()),
+            'a'..='z' => Some(c),
+            ' ' => Some('_'),
+            _ => None,
+        })
+        .flatten()
+        .collect::<String>()
 }
 
 fn write_portfolio_html(portfolio: &Rc<Portfolio>) {
@@ -27,12 +31,17 @@ fn write_portfolio_html(portfolio: &Rc<Portfolio>) {
             button type="submit" { "Search" }
         }
         p id="message" {}
+        script type="application/json" id="portfolio" { (PreEscaped(portfolio.json())) }
         script src="main.bundle.js" { }
     };
 
     let html = page.into_string();
 
-    println!("TODO: Write {} as {}.html.", html, slugify(portfolio.name().as_ref()));
+    println!(
+        "TODO: Write {} as {}.html.",
+        html,
+        slugify(portfolio.name().as_ref())
+    );
 }
 
 pub fn make_website(portfolio_map: PortfolioMap, regs: &HpdRegistrationMap, min_buildings: usize) {
