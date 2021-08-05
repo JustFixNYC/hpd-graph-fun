@@ -83,6 +83,11 @@ pub fn make_website(
                 li { a href=(href) { (name) } " (" (num_buildings) " buildings)" }
             }
         }
+        p {
+            "For more details, see the project's "
+            a href="https://github.com/JustFixNYC/hpd-graph-fun#readme" { "README" }
+            "."
+        }
     };
 
     write_website_file(&INDEX_FILENAME, &index_html.into_string())?;
