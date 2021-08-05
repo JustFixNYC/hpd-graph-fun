@@ -256,8 +256,22 @@ impl PortfolioMap {
         }
     }
 
-    pub fn all(&self) -> &Vec<Rc<Portfolio>> {
-        &self.portfolios
+    pub fn rank_by_building_count(
+        &self,
+        regs: &HpdRegistrationMap,
+        min_buildings: usize,
+    ) -> Vec<(Rc<Portfolio>, usize)> {
+        let mut ranking = vec![];
+
+        for portfolio in &self.portfolios {
+            let size = portfolio.building_count(&regs);
+            if size >= min_buildings {
+                ranking.push((Rc::clone(&portfolio), size));
+            }
+        }
+
+        rank_tuples(&mut ranking);
+        ranking
     }
 
     pub fn for_node(&self, node: NodeIndex<u32>) -> Option<Rc<Portfolio>> {

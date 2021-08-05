@@ -18,7 +18,6 @@ use std::rc::Rc;
 use hpd_graph::{HpdGraph, Node};
 use hpd_registrations::HpdRegistrationMap;
 use portfolio::{Portfolio, PortfolioMap};
-use ranking::rank_tuples;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -115,17 +114,9 @@ impl Program {
     }
 
     fn cmd_ranking(&self, min_buildings: usize) {
-        let mut ranking: Vec<(&Portfolio, usize)> = vec![];
-        let portfolios = self.make_portfolios();
-
-        for portfolio in portfolios.all() {
-            let size = portfolio.building_count(&self.regs);
-            if size >= min_buildings {
-                ranking.push((portfolio, size));
-            }
-        }
-
-        rank_tuples(&mut ranking);
+        let ranking = self
+            .make_portfolios()
+            .rank_by_building_count(&self.regs, min_buildings);
 
         let mut rank = 1;
         for (portfolio, size) in ranking {
