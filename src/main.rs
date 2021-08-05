@@ -127,8 +127,8 @@ impl Program {
         }
     }
 
-    fn cmd_website(&self, min_buildings: usize) {
-        website::make_website(self.make_portfolios(), &self.regs, min_buildings);
+    fn cmd_website(&self, min_buildings: usize) -> Result<(), Box<dyn Error>> {
+        website::make_website(self.make_portfolios(), &self.regs, min_buildings)
     }
 
     fn cmd_longpaths(&self, min_length: u32) {
@@ -286,6 +286,9 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("website") {
         let min_buildings =
             value_t!(matches.value_of("min-buildings"), usize).unwrap_or_else(|e| e.exit());
-        Program::new(args).unwrap().cmd_website(min_buildings);
+        Program::new(args)
+            .unwrap()
+            .cmd_website(min_buildings)
+            .unwrap();
     }
 }

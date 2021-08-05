@@ -1,8 +1,12 @@
 use maud::{html, PreEscaped, DOCTYPE};
+use std::error::Error;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use super::hpd_registrations::HpdRegistrationMap;
 use super::portfolio::{Portfolio, PortfolioMap};
+
+static SITE_DIR: &'static str = "public";
 
 fn slugify<T: AsRef<str>>(value: T) -> String {
     let value_ref = value.as_ref();
@@ -18,7 +22,16 @@ fn slugify<T: AsRef<str>>(value: T) -> String {
         .collect::<String>()
 }
 
-fn write_portfolio_html(portfolio: &Rc<Portfolio>) {
+fn write_website_file<T: AsRef<str>>(filename: T, content: &String) -> Result<(), Box<dyn Error>> {
+    let filename: PathBuf = [SITE_DIR, filename.as_ref()].iter().collect();
+
+    match std::fs::write(filename, content) {
+        Ok(result) => Ok(result),
+        Err(e) => Err(Box::new(e)),
+    }
+}
+
+fn portfolio_html(portfolio: &Rc<Portfolio>) -> String {
     let page = html! {
         (DOCTYPE)
         meta charset="utf-8";
@@ -35,23 +48,24 @@ fn write_portfolio_html(portfolio: &Rc<Portfolio>) {
         script src="main.bundle.js" { }
     };
 
-    let html = page.into_string();
-
-    println!(
-        "TODO: Write {} as {}.html.",
-        html,
-        slugify(portfolio.name().as_ref())
-    );
+    page.into_string()
 }
 
-pub fn make_website(portfolio_map: PortfolioMap, regs: &HpdRegistrationMap, min_buildings: usize) {
+pub fn make_website(
+    portfolio_map: PortfolioMap,
+    regs: &HpdRegistrationMap,
+    min_buildings: usize,
+) -> Result<(), Box<dyn Error>> {
     let portfolios = portfolio_map.rank_by_building_count(&regs, min_buildings);
 
     for (portfolio, _) in &portfolios {
-        write_portfolio_html(portfolio);
+        let html = portfolio_html(portfolio);
+        let filename = format!("{}.html", slugify(portfolio.name().as_ref()));
+        write_website_file(filename, &html)?;
     }
 
     println!("Exported {} portfolios.", portfolios.len());
+    Ok(())
 }
 
 #[test]
