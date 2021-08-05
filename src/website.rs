@@ -65,21 +65,22 @@ pub fn make_website(
     min_buildings: usize,
 ) -> Result<(), Box<dyn Error>> {
     let portfolios = portfolio_map.rank_by_building_count(&regs, min_buildings);
-    let mut list_items: Vec<(String, Rc<String>)> = vec![];
+    let mut list_items: Vec<(String, Rc<String>, usize)> = vec![];
 
-    for (portfolio, _) in &portfolios {
+    for (portfolio, num_buildings) in &portfolios {
         let html = portfolio_html(portfolio);
         let name = portfolio.name();
         let filename = format!("{}.html", slugify(name.as_ref()));
         write_website_file(&filename, &html)?;
-        list_items.push((filename, name));
+        list_items.push((filename, name, *num_buildings));
     }
 
     let index_html = html! {
         (header("hpd-graph-fun"))
-        ul {
-            @for (href, name) in &list_items {
-                li { a href=(href) { (name) } }
+        p { "These are all the portfolios with at least " (min_buildings) " buildings." }
+        ol {
+            @for (href, name, num_buildings) in &list_items {
+                li { a href=(href) { (name) } " (" (num_buildings) " buildings)" }
             }
         }
     };
