@@ -37,6 +37,7 @@ fn header<T: AsRef<str>>(title: T) -> Markup {
         meta charset="utf-8";
         link rel="stylesheet" href="styles.css";
         title { (title) }
+        h1 { (title) }
     }
 }
 
@@ -44,7 +45,6 @@ fn portfolio_html(portfolio: &Rc<Portfolio>) -> String {
     let page = html! {
         (header(portfolio.name().as_ref()))
         div id="graph" {}
-        h1 { (portfolio.name()) }
         form id="search-form" {
             input type="search" value="" placeholder="🔎" id="search-input";
             button type="submit" { "Search" }
