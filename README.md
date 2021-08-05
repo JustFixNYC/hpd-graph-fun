@@ -46,7 +46,7 @@ hpd dot "MOSES GUTMAN" | dot -Tsvg > portfolio.svg
 
 ### Using a web browser
 
-An alternative is to use `hpd json` to export a portfolio as JSON, and then visualize the graph using a web browser.
+An alternative is to use `hpd website` to export the largest portfolios as a static website.
 
 To do this, you will also need [yarn][] and [nodejs][].
 
@@ -54,11 +54,19 @@ From the repository root, do the following:
 
 1. Run `yarn`.
 
-2. Export a portfolio you want to visualize to `public/portfolio.json`.  For example, `hpd json "MOSES GUTMAN" > public/portfolio.json` will export the portfolio that contains Moses Gutman.
+2. Run `yarn build`.
 
-3. Run `yarn watch`.
+3. Run `hpd website`.
 
-4. Visit http://localhost:1234 to view the portfolio.
+#### Developing the website
+
+If you need to change the website's built JS bundle:
+
+1. Run `yarn watch`.
+
+2. Visit http://localhost:1234.
+
+When you make any edits, you can reload your web browser to see the results.
 
 [yarn]: https://yarnpkg.com/
 [nodejs]: https://nodejs.org/en/
