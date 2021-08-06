@@ -46,7 +46,7 @@ impl Program {
 
     fn cmd_json(&self, name: &str) {
         let portfolio = self.get_portfolio_with_name(&name.to_owned());
-        println!("{}", portfolio.json());
+        println!("{}", portfolio.json(&self.regs));
     }
 
     fn cmd_info(&self, name: Option<&str>, top: usize) {

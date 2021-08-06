@@ -114,12 +114,13 @@ impl Portfolio {
         bins.len()
     }
 
-    pub fn json(&self) -> String {
+    pub fn json(&self, regs: &HpdRegistrationMap) -> String {
         let graph = portfolio_json(
             self.name().to_string(),
             &self.nodes,
             &self.graph,
             self.find_local_bridges_hashset(),
+            regs,
         );
         serde_json::to_string(&graph).unwrap()
     }

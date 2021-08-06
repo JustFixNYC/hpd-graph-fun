@@ -13,8 +13,13 @@ const LEGEND_HTML = `
   <p>A name node and address node are connected via an edge if at least one HPD registration contact contains both (i.e., if the name is associated with the address).</p>
   <p>The weight of an edge corresponds to the number of HPD registration contacts it has.</p>
   <p>The edge is a dashed line if it corresponds to only one HPD contact registration <em>and</em> is a local bridge.</p>
+  <p>Clicking on an edge will open one (of possibly many!) associated buildings in <em>Who Owns What</em>.</p>
 </details>
 `;
+
+function wowLink(bbl: string): string {
+  return `https://whoownswhat.justfix.nyc/en/bbl/${bbl}`;
+}
 
 function coloredLabel(background: string, color: string = 'white'): string {
   return `<span style="background-color: ${background}; color: white">${background}</span>`;
@@ -29,6 +34,19 @@ function getEdgeColor(edge: PortfolioEdge): string {
   return 'black';
 }
 
+function getEdgeLabel(edge: PortfolioEdge): string {
+  const parts = [
+    `${edge.reg_contacts} HPD registration${edge.reg_contacts === 1 ? '' : 's'} ` +
+    `(e.g. BBL ${edge.bbl})`
+  ];
+
+  if (edge.is_bridge) {
+    parts.push('Local bridge');
+  }
+
+  return parts.join('<br>');
+}
+
 function portfolioToGraphData(p: Portfolio): GraphData {
   return {
     nodes: p.nodes.map((node): NodeObject => ({
@@ -39,7 +57,7 @@ function portfolioToGraphData(p: Portfolio): GraphData {
     })),
     links: p.edges.map((edge): LinkObject => ({
       source: edge.from,
-      name: `${edge.reg_contacts} HPD registration${edge.reg_contacts === 1 ? '' : 's'}`,
+      name: getEdgeLabel(edge),
       color: getEdgeColor(edge),
       edge,
       target: edge.to,
@@ -70,9 +88,17 @@ function main() {
 
   const graphData = portfolioToGraphData(portfolio);
 
-  const graph = ForceGraph()(graphEl).graphData(graphData).nodeColor(node => {
-    return selectedNodes.has(node) ? "blue" : node.color;
-  }).linkLineDash(link => link.edge.is_bridge && link.edge.reg_contacts === 1 ? [5, 5] : null);
+  const graph = ForceGraph()(graphEl)
+    .graphData(graphData)
+    .nodeColor(node => {
+      return selectedNodes.has(node) ? "blue" : node.color;
+    })
+    .linkLineDash(
+      link => link.edge.is_bridge && link.edge.reg_contacts === 1 ? [5, 5] : null
+    )
+    .onLinkClick(link => {
+      window.open(wowLink(link.edge.bbl), '_blank');
+    });
 
   searchForm.addEventListener("submit", (e) => {
     e.preventDefault();

@@ -8,6 +8,7 @@ type PortfolioEdge = {
   to: number,
   reg_contacts: number,
   is_bridge: boolean,
+  bbl: string,
 };
 
 type Portfolio = {

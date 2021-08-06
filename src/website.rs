@@ -42,7 +42,7 @@ fn header<T: AsRef<str>>(title: T) -> Markup {
     }
 }
 
-fn portfolio_html(portfolio: &Rc<Portfolio>) -> String {
+fn portfolio_html(portfolio: &Rc<Portfolio>, regs: &HpdRegistrationMap) -> String {
     let page = html! {
         (header(portfolio.name().as_ref()))
         div id="graph" {}
@@ -52,7 +52,7 @@ fn portfolio_html(portfolio: &Rc<Portfolio>) -> String {
         }
         p id="message" {}
         p id="back" { a href=(INDEX_FILENAME) { "« Back" } }
-        script type="application/json" id="portfolio" { (PreEscaped(portfolio.json())) }
+        script type="application/json" id="portfolio" { (PreEscaped(portfolio.json(regs))) }
         script src="main.bundle.js" { }
     };
 
@@ -68,7 +68,7 @@ pub fn make_website(
     let mut list_items: Vec<(String, Rc<String>, usize)> = vec![];
 
     for (portfolio, num_buildings) in &portfolios {
-        let html = portfolio_html(portfolio);
+        let html = portfolio_html(portfolio, regs);
         let name = portfolio.name();
         let filename = format!("{}.html", slugify(name.as_ref()));
         write_website_file(&filename, &html)?;

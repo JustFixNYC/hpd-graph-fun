@@ -42,4 +42,31 @@ impl BBL {
             lot,
         })
     }
+
+    pub fn to_string(&self) -> String {
+        format!("{}{:0>5}{:0>4}", self.boro as u8, self.block, self.lot)
+    }
+}
+
+#[test]
+fn test_to_string_works() {
+    assert_eq!(
+        BBL {
+            boro: Boro::StatenIsland,
+            block: 1,
+            lot: 2
+        }
+        .to_string(),
+        "5000010002".to_owned()
+    );
+
+    assert_eq!(
+        BBL {
+            boro: Boro::Queens,
+            block: 12345,
+            lot: 6789
+        }
+        .to_string(),
+        "4123456789".to_owned()
+    );
 }
