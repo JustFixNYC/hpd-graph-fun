@@ -1,6 +1,29 @@
 import { assertNotNull, getHTMLElement } from '@justfixnyc/util';
 import ForceGraph, { GraphData, LinkObject, NodeObject } from 'force-graph';
 
+const NAME_COLOR = 'crimson';
+
+const BIZADDR_COLOR = 'gray';
+
+const LEGEND_HTML = `
+<details>
+  <summary>Legend</summary>
+  <ol>
+    <li><p>Each name is a ${coloredLabel(NAME_COLOR)} node.</p></li>
+    <li><p>Each business address is a  ${coloredLabel(BIZADDR_COLOR)} node.</p></li>
+    <li>
+      <p>A name node and address node are connected via an edge if at least one HPD registration contact contains both (i.e., if the name is associated with the address).</p>
+      <p>The weight of an edge corresponds to the number of HPD registration contacts it has.</p>
+      <p>The edge is a dashed line if it corresponds to only one HPD contact registration <em>and</em> is a local bridge.</p>
+    </li>
+  </ol>
+</details>
+`;
+
+function coloredLabel(background: string, color: string = 'white'): string {
+  return `<span style="background-color: ${background}; color: white">${background}</span>`;
+}
+
 function getEdgeColor(edge: PortfolioEdge): string {
   if (edge.reg_contacts === 1) {
     return 'lightgray'
@@ -15,7 +38,7 @@ function portfolioToGraphData(p: Portfolio): GraphData {
     nodes: p.nodes.map((node): NodeObject => ({
       id: node.id,
       name: 'Name' in node.value ? node.value.Name : node.value.BizAddr,
-      color: 'Name' in node.value ? 'crimson' : 'gray',
+      color: 'Name' in node.value ? NAME_COLOR : BIZADDR_COLOR,
       val: 10,
     })),
     links: p.edges.map((edge): LinkObject => ({
@@ -34,6 +57,11 @@ function main() {
   const searchForm = getHTMLElement("form", "#search-form");
   const searchInput = getHTMLElement("input", "#search-input");
   const portfolio: Portfolio = JSON.parse(assertNotNull(getHTMLElement("script", "#portfolio").textContent));
+  const legendEl = document.createElement('div');
+
+  legendEl.id = 'legend';
+  legendEl.innerHTML = LEGEND_HTML;
+  document.body.appendChild(legendEl);
 
   searchInput.value = "";
 

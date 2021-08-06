@@ -2,6 +2,20 @@ html, body {
   font-family: Calibri, Arial, Helvetica, sans-serif;
 }
 
+#legend {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid gray;
+  background: white;
+  padding: 1em 1em;
+  width: 20em;
+}
+
+#legend ol {
+  padding-left: 1em;
+}
+
 #graph {
   position: fixed;
   top: 0;
@@ -9,4 +23,8 @@ html, body {
   right: 0;
   bottom: 0;
   z-index: -1;
+}
+
+details summary:hover {
+  cursor: pointer;
 }
