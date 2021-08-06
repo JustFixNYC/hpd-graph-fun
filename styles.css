@@ -1,3 +1,17 @@
+html, body {
+  font-family: Calibri, Arial, Helvetica, sans-serif;
+}
+
+#legend {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid gray;
+  background: white;
+  padding: 1em 1em;
+  width: 20em;
+}
+
 #graph {
   position: fixed;
   top: 0;
@@ -5,4 +19,12 @@
   right: 0;
   bottom: 0;
   z-index: -1;
+}
+
+details summary:hover {
+  cursor: pointer;
+}
+
+details p:last-child {
+  margin-bottom: 0;
 }
