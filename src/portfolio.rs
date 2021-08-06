@@ -8,6 +8,7 @@ use std::rc::Rc;
 
 use super::hpd_graph::{HpdPetGraph, Node, RegInfo};
 use super::hpd_registrations::HpdRegistrationMap;
+use super::json::portfolio_json;
 use super::ranking::rank_tuples;
 
 pub struct Portfolio {
@@ -114,55 +115,7 @@ impl Portfolio {
     }
 
     pub fn json(&self) -> String {
-        // Note that petgraph supports Serde, but it only supports serializing
-        // entire graphs, not connected components, which is what we want, so
-        // I guess we'll have to roll our own here.
-
-        #[derive(serde::Serialize)]
-        struct JsonNode<'a> {
-            id: usize,
-            value: &'a Node,
-        }
-
-        #[derive(serde::Serialize)]
-        struct JsonEdge {
-            from: usize,
-            to: usize,
-            reg_contacts: usize,
-        }
-
-        #[derive(serde::Serialize)]
-        struct JsonGraph<'a> {
-            title: String,
-            nodes: Vec<JsonNode<'a>>,
-            edges: Vec<JsonEdge>,
-        }
-
-        let mut edges_written = HashSet::new();
-        let mut graph = JsonGraph {
-            title: self.name().to_string(),
-            nodes: vec![],
-            edges: vec![],
-        };
-
-        for node in &self.nodes {
-            graph.nodes.push(JsonNode {
-                id: node.index(),
-                value: self.graph.node_weight(*node).unwrap(),
-            });
-            for edge in self.graph.edges(*node) {
-                let id = edge.id();
-                if !edges_written.contains(&id) {
-                    edges_written.insert(id);
-                    graph.edges.push(JsonEdge {
-                        from: edge.source().index(),
-                        to: edge.target().index(),
-                        reg_contacts: edge.weight().len(),
-                    });
-                }
-            }
-        }
-
+        let graph = portfolio_json(self.name().to_string(), &self.nodes, &self.graph);
         serde_json::to_string(&graph).unwrap()
     }
 
