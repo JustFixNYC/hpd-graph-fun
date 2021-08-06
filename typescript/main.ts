@@ -8,15 +8,11 @@ const BIZADDR_COLOR = 'gray';
 const LEGEND_HTML = `
 <details>
   <summary>Legend</summary>
-  <ol>
-    <li><p>Each name is a ${coloredLabel(NAME_COLOR)} node.</p></li>
-    <li><p>Each business address is a  ${coloredLabel(BIZADDR_COLOR)} node.</p></li>
-    <li>
-      <p>A name node and address node are connected via an edge if at least one HPD registration contact contains both (i.e., if the name is associated with the address).</p>
-      <p>The weight of an edge corresponds to the number of HPD registration contacts it has.</p>
-      <p>The edge is a dashed line if it corresponds to only one HPD contact registration <em>and</em> is a local bridge.</p>
-    </li>
-  </ol>
+  <p>Each name is a ${coloredLabel(NAME_COLOR)} node.</p>
+  <p>Each business address is a  ${coloredLabel(BIZADDR_COLOR)} node.</p>
+  <p>A name node and address node are connected via an edge if at least one HPD registration contact contains both (i.e., if the name is associated with the address).</p>
+  <p>The weight of an edge corresponds to the number of HPD registration contacts it has.</p>
+  <p>The edge is a dashed line if it corresponds to only one HPD contact registration <em>and</em> is a local bridge.</p>
 </details>
 `;
 
