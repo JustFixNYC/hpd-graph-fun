@@ -20,6 +20,7 @@ declare module "force-graph" {
     target: number;
     name: string;
     color: string;
+    edge: PortfolioEdge,
   };
 
   type Accessor<In, Out> = Out | string | ((obj: In) => Out);

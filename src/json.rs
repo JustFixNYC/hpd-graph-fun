@@ -1,4 +1,4 @@
-use petgraph::graph::NodeIndex;
+use petgraph::graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::EdgeRef;
 use std::collections::HashSet;
 
@@ -19,6 +19,7 @@ pub struct JsonEdge {
     from: usize,
     to: usize,
     reg_contacts: usize,
+    is_bridge: bool,
 }
 
 #[derive(serde::Serialize)]
@@ -32,6 +33,7 @@ pub fn portfolio_json<'a>(
     title: String,
     nodes: &'a HashSet<NodeIndex<u32>>,
     petgraph: &'a HpdPetGraph,
+    local_bridges: HashSet<EdgeIndex<u32>>,
 ) -> JsonGraph<'a> {
     let mut edges_written = HashSet::new();
     let mut graph = JsonGraph {
@@ -53,6 +55,7 @@ pub fn portfolio_json<'a>(
                     from: edge.source().index(),
                     to: edge.target().index(),
                     reg_contacts: edge.weight().len(),
+                    is_bridge: local_bridges.contains(&id),
                 });
             }
         }

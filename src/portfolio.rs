@@ -115,18 +115,19 @@ impl Portfolio {
     }
 
     pub fn json(&self) -> String {
-        let graph = portfolio_json(self.name().to_string(), &self.nodes, &self.graph);
+        let graph = portfolio_json(
+            self.name().to_string(),
+            &self.nodes,
+            &self.graph,
+            self.find_local_bridges_hashset(),
+        );
         serde_json::to_string(&graph).unwrap()
     }
 
     pub fn dot_graph(&self) -> String {
         let g = self.graph.deref();
         let gf = petgraph::visit::NodeFiltered::from_fn(&g, |g| self.nodes.is_visited(&g));
-        let bridges: HashSet<EdgeIndex<u32>> = self
-            .find_local_bridges()
-            .into_iter()
-            .map(|(n1, n2)| self.graph.find_edge(n1, n2).unwrap())
-            .collect();
+        let bridges = self.find_local_bridges_hashset();
         let get_edge_str = |_, edge: petgraph::graph::EdgeReference<Vec<RegInfo>>| {
             let is_bridge = bridges.contains(&edge.id());
             let color = if is_bridge { "red" } else { "black" };
@@ -169,6 +170,13 @@ impl Portfolio {
         } else {
             vec![]
         }
+    }
+
+    fn find_local_bridges_hashset(&self) -> HashSet<EdgeIndex<u32>> {
+        self.find_local_bridges()
+            .into_iter()
+            .map(|(n1, n2)| self.graph.find_edge(n1, n2).unwrap())
+            .collect()
     }
 }
 

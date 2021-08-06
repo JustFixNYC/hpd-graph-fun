@@ -22,6 +22,7 @@ function portfolioToGraphData(p: Portfolio): GraphData {
       source: edge.from,
       name: `${edge.reg_contacts} HPD registration${edge.reg_contacts === 1 ? '' : 's'}`,
       color: getEdgeColor(edge),
+      edge,
       target: edge.to,
     })),
   };
@@ -47,7 +48,7 @@ function main() {
 
   const graph = ForceGraph()(graphEl).graphData(graphData).nodeColor(node => {
     return selectedNodes.has(node) ? "blue" : node.color;
-  });
+  }).linkLineDash(link => link.edge.is_bridge && link.edge.reg_contacts === 1 ? [5, 5] : null);
 
   searchForm.addEventListener("submit", (e) => {
     e.preventDefault();
