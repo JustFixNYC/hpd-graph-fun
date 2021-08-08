@@ -26,6 +26,12 @@ impl Portfolio {
         }
     }
 
+    fn iter_nodes_with_weights(&self) -> impl Iterator<Item = (&NodeIndex, &Node)> {
+        self.nodes
+            .iter()
+            .map(move |idx| (idx, self.graph.node_weight(*idx).unwrap()))
+    }
+
     fn get_hpd_reg_contact_count(&self, node: &NodeIndex<u32>) -> usize {
         let mut total = 0;
         for edge in self.graph.edges(*node) {
@@ -38,8 +44,8 @@ impl Portfolio {
     pub fn rank_bizaddrs(&self) -> Vec<(Rc<String>, usize)> {
         let mut result = vec![];
 
-        for node in self.nodes.iter() {
-            if let Node::BizAddr(name) = self.graph.node_weight(*node).unwrap() {
+        for (node, weight) in self.iter_nodes_with_weights() {
+            if let Node::BizAddr(name) = weight {
                 result.push((Rc::clone(name), self.get_hpd_reg_contact_count(node)));
             }
         }
@@ -51,8 +57,8 @@ impl Portfolio {
     pub fn rank_names(&self) -> Vec<(Rc<String>, usize)> {
         let mut result = vec![];
 
-        for node in self.nodes.iter() {
-            if let Node::Name(name) = self.graph.node_weight(*node).unwrap() {
+        for (node, weight) in self.iter_nodes_with_weights() {
+            if let Node::Name(name) = weight {
                 result.push((Rc::clone(name), self.get_hpd_reg_contact_count(node)));
             }
         }
@@ -77,8 +83,8 @@ impl Portfolio {
 
     fn get_best_name(&self) -> Option<String> {
         let mut best: Option<(NodeIndex<u32>, usize)> = None;
-        for node in self.nodes.iter() {
-            if let Node::Name(_) = self.graph.node_weight(*node).unwrap() {
+        for (node, weight) in self.iter_nodes_with_weights() {
+            if let Node::Name(_) = weight {
                 let count = self.get_hpd_reg_contact_count(node);
                 let is_new_best = if let Some((_, current_count)) = best {
                     current_count < count
@@ -100,8 +106,8 @@ impl Portfolio {
 
     pub fn building_count(&self, regs: &HpdRegistrationMap) -> usize {
         let mut bins = HashSet::<u32>::new();
-        for node in self.nodes.iter() {
-            if let Node::Name(_) = self.graph.node_weight(*node).unwrap() {
+        for (node, weight) in self.iter_nodes_with_weights() {
+            if let Node::Name(_) = weight {
                 for edge in self.graph.edges(*node) {
                     for reg_info in edge.weight() {
                         for reg in regs.get_by_id(reg_info.id).unwrap() {
